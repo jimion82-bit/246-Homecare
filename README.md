@@ -7,4 +7,6 @@ Visitors choose a service, describe their property and see an estimate while a 3
 - `index.html`: the whole site (prices live in the `PRICING` and `PACKAGES` blocks near the top of the script)
 - `logo.jpeg`: the 246 Home Care logo
 
+Live at https://246homecare.com
+
 Instagram: [@246HomecareBB](https://www.instagram.com/246homecarebb/)
