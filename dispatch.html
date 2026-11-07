@@ -99,7 +99,7 @@ label.lbl { font-weight: 700; font-size: 14px; }
 </main>
 
 <script>
-/* Contractor pay as a share of the customer estimate. Change this one number to change every job card. */
+/* Contractor pay as a share of the lowest price in the customer estimate. Change this one number to change every job card. */
 const PAYOUT_SHARE = 0.65;
 
 // Lines from the booking that are safe to share with the whole group
@@ -126,9 +126,10 @@ function payLine(estimate) {
   if (/call|walkthrough/i.test(estimate)) return 'Pay: agreed after the discovery call or walkthrough';
   const nums = (estimate.match(/\$[\d,]+/g) || []).map(v => Number(v.replace(/[$,]/g, '')));
   if (!nums.length) return 'Pay: to be confirmed';
-  const low = round5(nums[0] * PAYOUT_SHARE), high = round5((nums[1] || nums[0]) * PAYOUT_SHARE);
+  // Pay is a single figure: a share of the lowest price in the estimate
+  const pay = round5(nums[0] * PAYOUT_SHARE);
   const per = /month/i.test(estimate) ? ' per month' : '';
-  return 'Pay: ' + (low === high ? money(low) : money(low) + ' - ' + money(high)) + per;
+  return 'Pay: ' + money(pay) + per;
 }
 
 let current = { card: '', confirm: '' };
