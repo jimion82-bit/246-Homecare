@@ -977,7 +977,7 @@ const PRICING = {
     homehelp: { name: 'Home help', hourLow: 35, hourHigh: 50 },
     handyman: { name: 'General handyman' }
   },
-  laundry: { loadLow: 25, loadHigh: 40 },             // per load, two-load minimum
+  laundry: { firstTwoLoads: 75, extraLoad: 35 },     // flat: $75 covers 2 loads, then $35 per extra load
   truck: {
     loads: {                                          // per trip, driver included; $150 is the most any trip costs
       small: { low: 80, high: 100 },
@@ -999,7 +999,7 @@ const PACKAGES = {
       large: { label: 'Up to 20,000 sq ft', price: [545, 845] }, xl: { label: 'Over 20,000 sq ft', price: null } } },
   refresh: { name: 'One-Time Refresh', unit: 'BBD flat price',
     note: 'A full clean, pressure washing up to 1,000 sq ft and all your windows in one visit. Ideal for move-in day or an Airbnb turnover.',
-    prices: { 2: [575, 575], 3: [625, 625], 4: [775, 775] }, deepExtra: 185 }
+    prices: { 2: [250, 250], 3: [275, 275], 4: [340, 340] }, deepExtra: 185 }
 };
 const JOB_NOTES = {
   plumbing: 'Leaks, taps, toilets, drains and pipes.',
@@ -1112,11 +1112,14 @@ case 'windows': {
       return { quote: true, low: 0, high: 0, rows: [['Price', 'Given after a discovery call'], ['Parts and materials', 'At cost']], details, recurringApplies: false };
     }
     case 'laundry': {
-      const l = p.laundry;
-      low = l.loadLow * s.loads; high = l.loadHigh * s.loads;
-      rows.push([s.loads + ' loads × $25–40', span(low, high)]);
+      const l = p.laundry, extra = Math.max(0, s.loads - 2);
+      low = high = l.firstTwoLoads + l.extraLoad * extra;
+      rows.push(['2 loads', money(l.firstTwoLoads)]);
+      if (extra) rows.push([extra + ' extra load' + (extra > 1 ? 's' : '') + ' × $35', '+' + money(l.extraLoad * extra)]);
       details.push('Loads: ' + s.loads);
-      break;
+      if (s.recurring) { low = high = Math.max(l.firstTwoLoads, low * (1 - p.recurringDiscount)); rows.push(['Biweekly discount (never below $75)', '−10%']); }
+      rows.push(['Rounded to the nearest $5', '']);
+      return { low: roundTo5(low), high: roundTo5(high), rows, details, recurringApplies: !!s.recurring };
     }
     case 'packages': {
       if (s.pkg === 'upkeep') {
