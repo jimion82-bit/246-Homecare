@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>246 Dispatch</title>
+<link rel="icon" href="logo.jpeg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;600;700&display=swap">
+<style>
+/* Layout concept: a working desk tool. Paste the booking on the left, send the card on the right. */
+:root {
+  --ultra: #00267F; --ultra-soft: #123A9C; --gold: #FFC726; --ink: #0B1B4D; --paper: #F2F6FB;
+  --line: #C7D3EC; --muted: #4A5B86; --wa: #128C5E; --coral: #FF6B57;
+  --display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.45 var(--body); }
+header {
+  display: flex; align-items: center; gap: 12px;
+  padding-block: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--ultra); color: #fff;
+}
+header .badge { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; flex: none; }
+header .badge img { display: block; width: 52px; height: 52px; margin: -4.4px 0 0 -4.4px; }
+header h1 { margin: 0; font: 800 22px/1.1 var(--display); }
+header p { margin: 2px 0 0; color: var(--gold); font-size: 13px; font-weight: 600; }
+main {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px;
+  max-width: 1100px; margin: 0 auto;
+  padding-block: 20px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+section { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+h2 { margin: 0; font: 800 18px/1.2 var(--display); }
+.step { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 6px; border-radius: 50%; background: var(--gold); font-size: 13px; }
+textarea, input[type="text"] {
+  width: 100%; padding: 12px; border: 2px solid var(--line); border-radius: 12px; background: #fff; font: inherit; color: inherit;
+}
+textarea { min-height: 300px; resize: vertical; font-size: 14px; }
+textarea:focus, input:focus { outline: none; border-color: var(--ultra); }
+.card {
+  padding: 14px 16px; border-radius: 14px; background: #fff; border: 2px solid var(--line);
+  white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14.5px; min-height: 120px;
+}
+.card.empty { color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+button, .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 11px 16px; border: 0; border-radius: 12px; font: 700 15px/1.1 var(--body); text-decoration: none; cursor: pointer;
+}
+.primary { background: var(--ultra); color: #fff; }
+.wa { background: var(--wa); color: #fff; }
+.ghost { background: #fff; color: var(--ink); border: 2px solid var(--line); }
+button:focus-visible, .btn:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--ultra); }
+.note { font-size: 13px; color: var(--muted); }
+.warn { padding: 10px 12px; border-radius: 10px; background: #FFF4D1; font-size: 13.5px; }
+label.lbl { font-weight: 700; font-size: 14px; }
+@media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <span class="badge"><img src="logo.jpeg" alt="246 Home Care logo"></span>
+  <div><h1>246 Dispatch</h1><p>Turn a booking into a job card for the team group</p></div>
+</header>
+
+<main>
+  <section>
+    <h2><span class="step">1</span>Paste the booking</h2>
+    <textarea id="paste" placeholder="Paste the customer's WhatsApp booking message here, starting with &quot;Hi 246 Home Care&quot;"></textarea>
+    <label class="check"><input type="checkbox" id="withNotes"> Include the customer's notes in the job card</label>
+    <p class="note">Nothing you paste leaves this page. It is not saved or sent anywhere until you press a button below.</p>
+  </section>
+
+  <section>
+    <h2><span class="step">2</span>Post the job card to the group</h2>
+    <div class="card empty" id="card">The job card appears here. It never includes the customer's name, phone number or address.</div>
+    <div class="row">
+      <button class="primary" id="copyCard" type="button">Copy job card</button>
+      <a class="btn wa" id="shareCard" href="#" target="_blank" rel="noopener">Share to WhatsApp group</a>
+    </div>
+    <p class="warn" id="warn" hidden></p>
+
+    <h2 style="margin-top:12px"><span class="step">3</span>Confirm the contractor you chose</h2>
+    <label class="lbl" for="who">Contractor's first name</label>
+    <input type="text" id="who" placeholder="e.g. Marcus">
+    <div class="card empty" id="confirm">Type a name to build the private message with the customer's details.</div>
+    <div class="row">
+      <button class="primary" id="copyConfirm" type="button">Copy message</button>
+      <a class="btn wa" id="shareConfirm" href="#" target="_blank" rel="noopener">Send on WhatsApp</a>
+    </div>
+    <p class="note">Send this privately to the contractor only, never in the group.</p>
+  </section>
+</main>
+
+<script>
+/* Contractor pay as a share of the customer estimate. Change this one number to change every job card. */
+const PAYOUT_SHARE = 0.75;
+
+// Lines from the booking that are safe to share with the whole group
+const PUBLIC_KEYS = ['Service', 'Type', 'Home', 'Bedrooms', 'Lot size', 'Surface area', 'Surfaces', 'Patio', 'Windows', 'Floors',
+  'Loads', 'Load', 'Job type', 'Tasks', 'Appliances', 'Area to tile', 'Tiled area', 'Estimated time', 'Extras', 'Clean type', 'Frequency'];
+// Lines only the chosen contractor sees
+const PRIVATE_KEYS = ['Name', 'Phone', 'Address', 'Pickup address', 'Drop-off address', 'Notes'];
+
+const $ = id => document.getElementById(id);
+const round5 = n => Math.round(n / 5) * 5;
+const money = n => '$' + Math.round(n).toLocaleString('en-US');
+
+function parse(text) {
+  const out = {};
+  text.split(/\r?\n/).forEach(line => {
+    const m = line.match(/^\s*([A-Za-z][A-Za-z \-\/]+?):\s*(.+)$/);
+    if (m && !(m[1] in out)) out[m[1].trim()] = m[2].trim();
+  });
+  return out;
+}
+
+function payLine(estimate) {
+  if (!estimate) return 'Pay: to be confirmed';
+  if (/call|walkthrough/i.test(estimate)) return 'Pay: agreed after the discovery call or walkthrough';
+  const nums = (estimate.match(/\$[\d,]+/g) || []).map(v => Number(v.replace(/[$,]/g, '')));
+  if (!nums.length) return 'Pay: to be confirmed';
+  const low = round5(nums[0] * PAYOUT_SHARE), high = round5((nums[1] || nums[0]) * PAYOUT_SHARE);
+  const per = /month/i.test(estimate) ? ' per month' : '';
+  return 'Pay: ' + (low === high ? money(low) : money(low) + ' - ' + money(high)) + per;
+}
+
+let current = { card: '', confirm: '' };
+
+function build() {
+  const raw = $('paste').value, f = parse(raw);
+  const warn = $('warn');
+  if (!raw.trim()) {
+    $('card').textContent = 'The job card appears here. It never includes the customer’s name, phone number or address.';
+    $('card').classList.add('empty');
+    warn.hidden = true;
+    current.card = '';
+    buildConfirm(f);
+    return;
+  }
+  const ref = f['Job ref'] || 'no reference';
+  const lines = ['NEW JOB: ' + ref];
+  PUBLIC_KEYS.forEach(k => { if (f[k]) lines.push(k + ': ' + f[k]); });
+  if (f['Parish']) lines.push('Area: ' + f['Parish']);
+  if (f['Preferred']) lines.push('When: ' + f['Preferred']);
+  lines.push(payLine(f['Estimate']));
+  if ($('withNotes').checked && f['Notes']) lines.push('Notes: ' + f['Notes']);
+  lines.push('', 'Want it? Reply "I’ll take ' + ref + '". James confirms who gets it.');
+  current.card = lines.join('\n');
+  $('card').textContent = current.card;
+  $('card').classList.remove('empty');
+
+  const problems = [];
+  if (!f['Job ref']) problems.push('No job reference found. Older bookings from before the update won’t have one.');
+  if (!f['Service']) problems.push('No service line found. Check you pasted the whole booking message.');
+  warn.hidden = !problems.length;
+  warn.textContent = problems.join(' ');
+  $('shareCard').href = 'https://wa.me/?text=' + encodeURIComponent(current.card);
+  buildConfirm(f);
+}
+
+function buildConfirm(f) {
+  f = f || parse($('paste').value);
+  const who = $('who').value.trim();
+  if (!who || !$('paste').value.trim()) {
+    $('confirm').textContent = 'Type a name to build the private message with the customer’s details.';
+    $('confirm').classList.add('empty');
+    current.confirm = '';
+    return;
+  }
+  const ref = f['Job ref'] || 'this job';
+  const lines = ['Hi ' + who + ', ' + ref + ' is yours. Here are the details:', ''];
+  if (f['Service']) lines.push('Service: ' + f['Service']);
+  PUBLIC_KEYS.slice(1).forEach(k => { if (f[k]) lines.push(k + ': ' + f[k]); });
+  if (f['Preferred']) lines.push('When: ' + f['Preferred']);
+  lines.push('');
+  if (f['Name']) lines.push('Customer: ' + f['Name']);
+  if (f['Phone']) lines.push('Phone: ' + f['Phone']);
+  if (f['Parish']) lines.push('Parish: ' + f['Parish']);
+  ['Address', 'Pickup address', 'Drop-off address', 'Notes'].forEach(k => { if (f[k]) lines.push(k + ': ' + f[k]); });
+  lines.push(payLine(f['Estimate']), '', 'Please message the customer today to confirm your arrival time, and send me before and after photos when you finish.');
+  current.confirm = lines.join('\n');
+  $('confirm').textContent = current.confirm;
+  $('confirm').classList.remove('empty');
+  $('shareConfirm').href = 'https://wa.me/?text=' + encodeURIComponent(current.confirm);
+}
+
+async function copy(text, btn, label) {
+  if (!text) return;
+  try { await navigator.clipboard.writeText(text); btn.textContent = 'Copied'; }
+  catch (e) { btn.textContent = 'Select the text and copy it'; }
+  setTimeout(() => { btn.textContent = label; }, 2000);
+}
+
+$('paste').addEventListener('input', build);
+$('withNotes').addEventListener('change', build);
+$('who').addEventListener('input', () => buildConfirm());
+$('copyCard').addEventListener('click', e => copy(current.card, e.currentTarget, 'Copy job card'));
+$('copyConfirm').addEventListener('click', e => copy(current.confirm, e.currentTarget, 'Copy message'));
+['shareCard', 'shareConfirm'].forEach(id => $(id).addEventListener('click', e => {
+  if ((id === 'shareCard' ? current.card : current.confirm) === '') e.preventDefault();
+}));
+</script>
+</body>
+</html>

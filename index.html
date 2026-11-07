@@ -347,6 +347,13 @@ input[type="range"]::-moz-range-thumb {
 .steppers.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .jobs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 [data-job][hidden], [data-pkg][hidden] { display: none !important; }
+.tiers.two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.join-link { padding: 0; border: 0; background: none; color: var(--gold); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+dialog .chip span { background: #fff; border: 2px solid #C7D3EC; color: var(--ink); }
+dialog .chip input:checked + span { background: var(--ultra); border-color: var(--ultra); color: #fff; }
+dialog .chips { margin-top: 4px; }
+.check { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; cursor: pointer; }
+.check input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--ultra); flex: none; }
 .single-stepper { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .single-stepper .stepper-box { width: 150px; }
 .acre { font-size: 13px; color: var(--mist); }
@@ -733,19 +740,26 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
 
     <fieldset class="group" data-for="packages">
       <legend class="label">Choose a package</legend>
-      <div class="tiers" style="margin-top:9px">
+      <div class="tiers two-col" style="margin-top:9px">
         <label class="tier"><input type="radio" name="pkg" value="villa" checked><span class="tier-card"><b>Villa Care</b><small>Weekly, monthly fee</small></span></label>
         <label class="tier"><input type="radio" name="pkg" value="lite"><span class="tier-card"><b>Villa Care Lite</b><small>Every 2 weeks</small></span></label>
         <label class="tier"><input type="radio" name="pkg" value="refresh"><span class="tier-card"><b>One-Time Refresh</b><small>Flat price</small></span></label>
+        <label class="tier"><input type="radio" name="pkg" value="upkeep"><span class="tier-card"><b>Basic Upkeep</b><small>Yard and windows, monthly</small></span></label>
       </div>
       <p class="tier-note" id="pkgNote"></p>
     </fieldset>
     <div class="group" data-for="packages">
-      <div class="single-stepper"><span class="label" id="lbl-pkgbeds">Bedrooms</span>
+      <div class="single-stepper" data-pkg="villa lite refresh"><span class="label" id="lbl-pkgbeds">Bedrooms</span>
         <div class="stepper-box" data-key="beds" role="group" aria-labelledby="lbl-pkgbeds"><button type="button" data-d="-1" aria-label="Fewer bedrooms">&minus;</button><output>3</output><button type="button" data-d="1" aria-label="More bedrooms">+</button></div></div>
       <div class="chips" role="group" aria-label="Type of clean in the Refresh" data-pkg="refresh">
         <label class="chip"><input type="radio" name="refreshClean" value="standard" checked><span>Standard clean</span></label>
         <label class="chip"><input type="radio" name="refreshClean" value="deep"><span>Deep clean (+$185)</span></label>
+      </div>
+      <div class="chips" role="group" aria-label="Lot size" data-pkg="upkeep">
+        <label class="chip"><input type="radio" name="lotBand" value="small" checked><span>Up to 5,000 sq ft</span></label>
+        <label class="chip"><input type="radio" name="lotBand" value="medium"><span>Up to 10,000 sq ft</span></label>
+        <label class="chip"><input type="radio" name="lotBand" value="large"><span>Up to 20,000 sq ft</span></label>
+        <label class="chip"><input type="radio" name="lotBand" value="xl"><span>Over 20,000 sq ft</span></label>
       </div>
     </div>
 
@@ -801,6 +815,7 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
     <div class="after">
       <p class="fine" id="fineMobile"></p>
       <span>246-263-7048 &nbsp;&middot;&nbsp; <a href="https://www.instagram.com/246homecarebb/" target="_blank" rel="noopener">@246HomecareBB</a></span>
+      <button type="button" class="join-link" data-join>Work with 246 Home Care</button>
     </div>
   </form>
 
@@ -818,7 +833,7 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
       <summary>How we worked this out</summary>
       <dl id="breakdown"></dl>
     </details>
-    <div class="contact"><span>246-263-7048</span><a href="https://www.instagram.com/246homecarebb/" target="_blank" rel="noopener">@246HomecareBB</a></div>
+    <div class="contact"><span>246-263-7048</span><a href="https://www.instagram.com/246homecarebb/" target="_blank" rel="noopener">@246HomecareBB</a><button type="button" class="join-link" data-join>Work with 246 Home Care</button></div>
   </div>
 </main>
 
@@ -869,6 +884,55 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
     <p class="fine" style="color:#40507C">No WhatsApp? Message or call 246-263-7048 with the details above.</p>
   </div>
   <canvas id="confetti" hidden></canvas>
+</dialog>
+
+<dialog id="joinDlg" aria-labelledby="joinTitle">
+  <div class="dlg-head">
+    <div>
+      <h2 id="joinTitle">Work with 246 Home Care</h2>
+      <p>Get paid jobs on the West Coast. Apply in two minutes.</p>
+    </div>
+    <button class="x" id="joinClose" type="button" aria-label="Close application form">&times;</button>
+  </div>
+  <form class="dlg-body" id="joinForm" novalidate>
+    <div class="fields">
+      <div class="field"><label for="j-name">Your name</label><input id="j-name" name="name" autocomplete="name" required><span class="err">Please add your name.</span></div>
+      <div class="field"><label for="j-phone">WhatsApp number</label><input id="j-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required><span class="err">Please add a number with at least 7 digits.</span></div>
+      <div class="field"><label for="j-parish">Parish you live in</label>
+        <select id="j-parish" name="parish" required>
+          <option value="">Choose a parish</option>
+          <option>St. James</option><option>St. Peter</option><option>St. Michael</option><option>Christ Church</option><option>St. Thomas</option><option>St. Lucy</option><option>St. Andrew</option><option>St. Joseph</option><option>St. George</option><option>St. John</option><option>St. Philip</option>
+        </select><span class="err">Please choose a parish.</span></div>
+      <div class="field"><label for="j-exp">Experience</label>
+        <select id="j-exp" name="experience"><option>Less than 1 year</option><option selected>1 to 3 years</option><option>3 to 5 years</option><option>More than 5 years</option></select></div>
+      <div class="field wide" id="j-svcs-field"><label>What work can you do?</label>
+        <div class="chips"><label class="chip"><input type="checkbox" name="svcs" value="House cleaning"><span>House cleaning</span></label><label class="chip"><input type="checkbox" name="svcs" value="Window cleaning"><span>Window cleaning</span></label><label class="chip"><input type="checkbox" name="svcs" value="Landscaping"><span>Landscaping</span></label><label class="chip"><input type="checkbox" name="svcs" value="Pressure washing"><span>Pressure washing</span></label><label class="chip"><input type="checkbox" name="svcs" value="Patio cleaning"><span>Patio cleaning</span></label><label class="chip"><input type="checkbox" name="svcs" value="Plumbing"><span>Plumbing</span></label><label class="chip"><input type="checkbox" name="svcs" value="Tiling"><span>Tiling</span></label><label class="chip"><input type="checkbox" name="svcs" value="Appliance repair"><span>Appliance repair</span></label><label class="chip"><input type="checkbox" name="svcs" value="Home help"><span>Home help</span></label><label class="chip"><input type="checkbox" name="svcs" value="Handyman"><span>Handyman</span></label><label class="chip"><input type="checkbox" name="svcs" value="Laundry"><span>Laundry</span></label><label class="chip"><input type="checkbox" name="svcs" value="Truck / driving"><span>Truck / driving</span></label></div>
+        <span class="err">Please pick at least one type of work.</span></div>
+      <div class="field wide"><label>Days you can work</label>
+        <div class="chips"><label class="chip"><input type="checkbox" name="days" value="Mon" checked><span>Mon</span></label><label class="chip"><input type="checkbox" name="days" value="Tue" checked><span>Tue</span></label><label class="chip"><input type="checkbox" name="days" value="Wed" checked><span>Wed</span></label><label class="chip"><input type="checkbox" name="days" value="Thu" checked><span>Thu</span></label><label class="chip"><input type="checkbox" name="days" value="Fri" checked><span>Fri</span></label><label class="chip"><input type="checkbox" name="days" value="Sat"><span>Sat</span></label><label class="chip"><input type="checkbox" name="days" value="Sun"><span>Sun</span></label></div></div>
+      <div class="field wide">
+        <label class="check"><input type="checkbox" name="transport" value="Yes"><span>I have my own transport</span></label>
+        <label class="check"><input type="checkbox" name="tools" value="Yes"><span>I have my own tools or equipment</span></label>
+      </div>
+      <div class="field"><label for="j-police">Police Certificate of Character</label>
+        <select id="j-police" name="police"><option>I have a current one</option><option>I will apply for one</option></select></div>
+      <div class="field"><label for="j-about">Anything else? (optional)</label><input id="j-about" name="about" placeholder="Past work, references"></div>
+      <div class="field wide" id="j-consent-field">
+        <label class="check"><input type="checkbox" id="j-consent" name="consent" value="Yes"><span>I agree to a background check and to 246 Home Care contacting me on WhatsApp about work.</span></label>
+        <span class="err">Please tick this box to apply.</span></div>
+    </div>
+    <button class="submit" type="submit">Send application on WhatsApp</button>
+    <p class="fine" style="color:#40507C">We check every applicant before adding them to our team. Approved team members get job alerts in our private WhatsApp group.</p>
+  </form>
+  <div class="dlg-body" id="joinDone" hidden>
+    <ol class="steps">
+      <li><strong>Press send in WhatsApp.</strong> Your application is already filled in.</li>
+      <li>We call you for a short chat and arrange a trial job.</li>
+      <li>Once approved, you join the 246 Home Care jobs group.</li>
+    </ol>
+    <a class="wa" id="joinWa" href="#" target="_blank" rel="noopener">Open WhatsApp</a>
+    <div class="summary" id="joinText"></div>
+  </div>
 </dialog>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -929,6 +993,10 @@ const PACKAGES = {
   lite: { name: 'Villa Care Lite', unit: 'BBD per month',
     note: 'Cleaning every two weeks, monthly windows and laundry pickup every two weeks.',
     prices: { 2: [525, 745], 3: [600, 825], 4: [825, 1125] } },
+  upkeep: { name: 'Basic Upkeep', unit: 'BBD per month',
+    note: 'Monthly landscaping (cutting, edging, hedges, debris) and monthly window cleaning. Priced by lot size.',
+    lotBands: { small: { label: 'Up to 5,000 sq ft', price: [235, 365] }, medium: { label: 'Up to 10,000 sq ft', price: [340, 530] },
+      large: { label: 'Up to 20,000 sq ft', price: [545, 845] }, xl: { label: 'Over 20,000 sq ft', price: null } } },
   refresh: { name: 'One-Time Refresh', unit: 'BBD flat price',
     note: 'A full clean, pressure washing up to 1,000 sq ft and all your windows in one visit. Ideal for move-in day or an Airbnb turnover.',
     prices: { 2: [575, 575], 3: [625, 625], 4: [775, 775] }, deepExtra: 185 }
@@ -986,7 +1054,7 @@ function estimate(s) {
       if (f > 1) rows.push(['Home size (' + n0(s.sqft) + ' sq ft)', '× ' + f.toFixed(2)]);
       if (bathAdj) rows.push(['Bathrooms', (bathAdj > 0 ? '+' : '−') + money(Math.abs(bathAdj))]);
       if (s.floors > 1) rows.push(['Floors', '× ' + floorF.toFixed(2)]);
-      details.push('Type: ' + tier.name, 'Home: ' + homeLine(s));
+      details.push('Home: ' + homeLine(s));
       const extras = [];
       if (s.windows) {
         const a = c.windowsAddOn;
@@ -1051,6 +1119,13 @@ case 'windows': {
       break;
     }
     case 'packages': {
+      if (s.pkg === 'upkeep') {
+        const ub = PACKAGES.upkeep.lotBands[s.lotBand];
+        details.push('Lot size: ' + ub.label);
+        if (!ub.price) return { quote: true, quoteText: 'Quote after walkthrough', low: 0, high: 0, rows: [['Lots over 20,000 sq ft', 'Priced after a walkthrough']], details, recurringApplies: false };
+        rows.push(['Basic Upkeep, ' + ub.label.toLowerCase(), span(ub.price[0], ub.price[1])], ['Package and recurring savings included', '']);
+        return { low: ub.price[0], high: ub.price[1], rows, details, recurringApplies: false, unit: PACKAGES.upkeep.unit };
+      }
       const pk = PACKAGES[s.pkg], band = s.beds <= 2 ? 2 : s.beds;
       details.push('Bedrooms: ' + s.beds);
       if (band > 4) {
@@ -1087,7 +1162,7 @@ const state = {
   service: 'cleaning',
   sqft: 1500, floors: 1, beds: 3, baths: 2, tier: 'standard', windows: false, windowCount: 6, laundry: false, recurring: false,
   lot: 5000, area: 1000, surfaces: ['Driveway'], patio: 300, hours: 2, loads: 2, load: 'small', km: 10, helpers: 0,
-  pkg: 'villa', refreshClean: 'standard',
+  pkg: 'villa', refreshClean: 'standard', lotBand: 'small',
   job: 'plumbing', tileArea: 50, appliances: ['Washing machine'], tasks: ['Curtains and blinds']
 };
 const LIMITS = { floors: [1, 3], beds: [1, 8], baths: [1, 7], windowCount: [1, 40], hours: [1, 8], loads: [2, 12] };
@@ -1223,6 +1298,7 @@ document.querySelectorAll('input.num[data-key]').forEach(n => {
 document.querySelectorAll('input[name="tier"]').forEach(r => r.addEventListener('change', () => { state.tier = r.value; update(true); }));
 document.querySelectorAll('input[name="load"]').forEach(r => r.addEventListener('change', () => { state.load = r.value; update(true); }));
 document.querySelectorAll('input[name="pkg"]').forEach(r => r.addEventListener('change', () => { state.pkg = r.value; update(true); }));
+document.querySelectorAll('input[name="lotBand"]').forEach(r => r.addEventListener('change', () => { state.lotBand = r.value; update(true); }));
 document.querySelectorAll('input[name="refreshClean"]').forEach(r => r.addEventListener('change', () => { state.refreshClean = r.value; update(true); }));
 document.querySelectorAll('input[name="job"]').forEach(r => r.addEventListener('change', () => { state.job = r.value; update(true); }));
 [['surf', 'surfaces', false], ['appl', 'appliances', true], ['task', 'tasks', true]].forEach(([name, key, rebuild]) => {
@@ -1276,11 +1352,20 @@ Object.keys(checks).forEach(id => $(id).addEventListener('input', () => {
   if (checks[id]($(id).value)) $(id).closest('.field').classList.remove('bad');
 }));
 
+// A short reference so a booking can be matched to its job card, e.g. 246-1108-K7
+let jobRef = '';
+function newJobRef() {
+  const now = new Date(), pad = n => String(n).padStart(2, '0');
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const tag = chars[Math.floor(Math.random() * chars.length)] + chars[Math.floor(Math.random() * chars.length)];
+  return '246-' + pad(now.getMonth() + 1) + pad(now.getDate()) + '-' + tag;
+}
 function bookingMessage(d) {
   const s = state, e = estimate(s), meta = SERVICES[s.service], truck = s.service === 'truck';
   const lines = [
     "Hi 246 Home Care, I'd like to book " + (s.service === 'cleaning' ? 'a cleaning' : s.service === 'packages' ? 'the ' + PACKAGES[s.pkg].name + ' package' : meta.name) + '.',
     '',
+    'Job ref: ' + (jobRef || newJobRef()),
     'Service: ' + serviceLabel(s)
   ].concat(e.details);
   if (RECURRING.has(s.service)) lines.push('Frequency: ' + (e.recurringApplies ? 'Biweekly or more' : 'One visit'));
@@ -1309,6 +1394,7 @@ form.addEventListener('submit', e => {
   });
   if (first) { first.focus(); return; }
 
+  jobRef = newJobRef();
   const text = bookingMessage(Object.fromEntries(new FormData(form)));
   const url = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text);
   const meta = SERVICES[state.service], big = estimate(state).high > PRICING.walkthroughOver;
@@ -1367,6 +1453,56 @@ function confetti() {
     else { x.clearRect(0, 0, c.width, c.height); c.hidden = true; }
   })(start);
 }
+
+/* ==========================================================================
+   Contractor sign-up
+   ========================================================================== */
+const joinDlg = $('joinDlg'), joinForm = $('joinForm');
+document.querySelectorAll('[data-join]').forEach(b => b.addEventListener('click', () => {
+  joinForm.hidden = false;
+  $('joinDone').hidden = true;
+  joinDlg.showModal();
+}));
+$('joinClose').addEventListener('click', () => joinDlg.close());
+joinDlg.addEventListener('click', e => { if (e.target === joinDlg) joinDlg.close(); });
+joinForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const d = new FormData(joinForm), svcs = d.getAll('svcs'), days = d.getAll('days');
+  const checks = [
+    ['j-name', (d.get('name') || '').trim().length > 1],
+    ['j-phone', (d.get('phone') || '').replace(/\D/g, '').length >= 7],
+    ['j-parish', !!d.get('parish')],
+    ['j-svcs-field', svcs.length > 0],
+    ['j-consent-field', d.get('consent') === 'Yes']
+  ];
+  let first = null;
+  checks.forEach(([id, ok]) => {
+    const field = $(id).closest('.field') || $(id);
+    field.classList.toggle('bad', !ok);
+    if (!ok && !first) first = field;
+  });
+  if (first) { first.scrollIntoView({ block: 'center' }); return; }
+  const text = [
+    'New contractor application for 246 Home Care',
+    '',
+    'Name: ' + d.get('name').trim(),
+    'WhatsApp: ' + d.get('phone').trim(),
+    'Parish: ' + d.get('parish'),
+    'Work: ' + svcs.join(', '),
+    'Experience: ' + d.get('experience'),
+    'Available: ' + (days.join(', ') || 'To discuss'),
+    'Own transport: ' + (d.get('transport') ? 'Yes' : 'No'),
+    'Own tools: ' + (d.get('tools') ? 'Yes' : 'No'),
+    'Police certificate: ' + d.get('police')
+  ].concat((d.get('about') || '').trim() ? ['About me: ' + d.get('about').trim()] : []).join('\n');
+  const url = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text);
+  $('joinWa').href = url;
+  $('joinText').textContent = text;
+  joinForm.hidden = true;
+  $('joinDone').hidden = false;
+  $('joinTitle').textContent = 'One last step';
+  try { window.open(url, '_blank', 'noopener'); } catch (err) { /* the button still works */ }
+});
 
 refreshUI();
 paintPrice();
@@ -2225,10 +2361,10 @@ paintPrice();
       sparkle: clean ? (tier === 'standard' ? 1 : .55) : (svc === 'windows' || svc === 'patio' || svc === 'packages') ? .6 : 0,
       bubble: clean && tier === 'deep' ? 1 : 0,
       move: (clean && tier === 'moveout') || svc === 'truck' ? 1 : 0,
-      laundry: (clean && state.laundry) || svc === 'laundry' || (svc === 'packages' && state.pkg !== 'refresh') ? 1 : 0,
+      laundry: (clean && state.laundry) || svc === 'laundry' || (svc === 'packages' && (state.pkg === 'villa' || state.pkg === 'lite')) ? 1 : 0,
       gleam: (clean && state.windows) || svc === 'windows' || svc === 'packages' ? 1 : 0,
       tools: svc === 'windows' || svc === 'repairs' ? 1 : 0,
-      lawn: svc === 'landscaping' ? 1 : 0,
+      lawn: svc === 'landscaping' || (svc === 'packages' && state.pkg === 'upkeep') ? 1 : 0,
       wash: svc === 'pressure' || (svc === 'packages' && state.pkg === 'refresh') ? 1 : 0,
       patio: svc === 'patio' ? 1 : 0,
       duration: d, ease: 'power2.out'
