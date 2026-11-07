@@ -1,0 +1,2489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>246 Home Care</title>
+<meta name="description" content="Build a mini 3D model of your home and get an instant cleaning estimate from 246 Home Care, West Coast Barbados.">
+<link rel="icon" href="logo.jpeg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout concept: a toy Bajan chattel house on its own island fills the screen,
+   and an ultramarine control sheet with fretwork edging sits beside it like a shutter.
+   One deliberate look built on the national colours, so it stays single-theme. */
+:root {
+  --ultra: #00267F;
+  --ultra-deep: #001A5C;
+  --ultra-soft: #123A9C;
+  --gold: #FFC726;
+  --sea: #12C4C9;
+  --coral: #FF6B57;
+  --foam: #F2FBFA;
+  --ink: #0B1B4D;
+  --mist: #C4D2F7;
+  --line: rgba(255,255,255,.16);
+  --sky: #A6EEF0;
+  --wa: #128C5E;
+  --display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --panel-w: 432px;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--sky);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
+
+/* ------- Stage ------- */
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(#3CC8EA, #A6EEF0 58%, #FFF3C9);
+}
+.stage canvas#scene { display: block; width: 100%; height: 100%; touch-action: none; outline: none; }
+.brand {
+  position: absolute;
+  z-index: 2;
+  top: max(24px, env(safe-area-inset-top, 0px));
+  left: max(32px, env(safe-area-inset-left, 0px));
+  max-width: min(600px, calc(100vw - var(--panel-w) - 64px));
+  pointer-events: none;
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+/* Logo slot: replace .logo-mark with <img src="logo.png" alt="246 Home Care" height="46"> when the official file is available. */
+/* The logo file has a white square around the badge; this crops it to the circle */
+.logo-badge {
+  --s: 64px;
+  flex: none;
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 6px 16px rgba(0,38,127,.28);
+}
+.logo-badge img {
+  display: block;
+  width: calc(var(--s) * 1.193);
+  height: calc(var(--s) * 1.193);
+  max-width: none;
+  margin: calc(var(--s) * -.1) 0 0 calc(var(--s) * -.1);
+}
+.logo-text b { display: block; font: 800 19px/1.1 var(--display); color: var(--ultra); }
+.logo-text span { font-size: 13px; font-weight: 600; color: var(--ultra); }
+h1 {
+  margin-top: 22px;
+  font: 800 clamp(2.5rem, 4.6vw, 4.5rem)/.98 var(--display);
+  letter-spacing: -.025em;
+  color: var(--ultra);
+  text-wrap: balance;
+}
+h1 em {
+  font-style: normal;
+  background: linear-gradient(transparent 62%, var(--gold) 62%, var(--gold) 92%, transparent 92%);
+}
+.lede { margin-top: 12px; max-width: 42ch; font-size: 17px; font-weight: 500; color: var(--ink); }
+
+.dock {
+  position: absolute;
+  z-index: 2;
+  left: max(32px, env(safe-area-inset-left, 0px));
+  bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  right: calc(var(--panel-w) + 32px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: none;
+}
+.dock > * { pointer-events: auto; }
+.peek {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ultra);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(0,38,127,.3);
+  transition: transform .18s, background .18s;
+}
+.peek:hover { transform: translateY(-2px); }
+.peek[aria-pressed="true"] { background: var(--coral); color: var(--ink); }
+.peek svg { width: 18px; height: 18px; }
+.paint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.82);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ultra);
+}
+.swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 0 1px rgba(0,38,127,.25);
+  transition: transform .15s;
+}
+.swatch:hover { transform: scale(1.14); }
+.swatch[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ultra); }
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 8px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.82);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.legend i { display: inline-block; width: 12px; height: 12px; margin-right: 5px; border-radius: 3px; vertical-align: -1px; background: var(--c); }
+.drag-hint { font-size: 13px; font-weight: 600; color: var(--ultra); padding-bottom: 12px; }
+
+.fallback-note {
+  position: absolute;
+  z-index: 1;
+  left: max(32px, env(safe-area-inset-left, 0px));
+  bottom: 32px;
+  max-width: 40ch;
+  font-weight: 600;
+  color: var(--ultra);
+}
+
+/* ------- Control sheet ------- */
+.panel {
+  position: fixed;
+  z-index: 3;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--panel-w);
+  display: flex;
+  flex-direction: column;
+  background: var(--ultra);
+  color: #fff;
+}
+/* Chattel-house fretwork, cut along the sheet's edge */
+.panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -13px;
+  width: 14px;
+  background: radial-gradient(circle at 100% 50%, var(--ultra) 12px, transparent 13px) 0 0 / 14px 24px repeat-y;
+}
+.controls {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-block: max(22px, env(safe-area-inset-top, 0px)) 18px;
+  padding-left: 26px;
+  padding-right: max(26px, env(safe-area-inset-right, 0px));
+  scrollbar-color: var(--ultra-soft) transparent;
+}
+.group { display: flex; flex-direction: column; gap: 9px; border: 0; margin: 0; padding: 0; min-width: 0; }
+.label, legend.label {
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mist);
+}
+.sqft-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.sqft-value { display: inline-flex; align-items: baseline; gap: 6px; }
+.sqft-value input {
+  width: 96px;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid var(--line);
+  background: none;
+  color: var(--gold);
+  text-align: right;
+  font: 800 30px/1.1 var(--display);
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.sqft-value input::-webkit-outer-spin-button,
+.sqft-value input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.sqft-value span { font-weight: 600; color: var(--mist); }
+input[type="range"] {
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  background: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--gold) var(--pct, 20%), var(--ultra-soft) var(--pct, 20%));
+}
+input[type="range"]::-moz-range-track { height: 10px; border-radius: 5px; background: var(--ultra-soft); }
+input[type="range"]::-moz-range-progress { height: 10px; border-radius: 5px; background: var(--gold); }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  margin-top: -9px;
+  border: 5px solid var(--gold);
+  border-radius: 50%;
+  background: var(--ultra);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 5px solid var(--gold);
+  border-radius: 50%;
+  background: var(--ultra);
+}
+.steppers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.stepper { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.stepper-box {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+  height: 44px;
+  padding: 0 4px;
+  border-radius: 12px;
+  background: var(--ultra-soft);
+}
+.stepper-box output {
+  text-align: center;
+  font: 800 21px/1 var(--display);
+  font-variant-numeric: tabular-nums;
+}
+.stepper-box button {
+  width: 32px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--gold);
+  font-size: 20px;
+  font-weight: 700;
+}
+.stepper-box button:hover:not(:disabled) { background: var(--ultra); }
+.stepper-box button:disabled { color: var(--mist); opacity: .4; cursor: not-allowed; }
+.hint { font-size: 13px; color: var(--gold); }
+
+.tiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tier { position: relative; display: block; cursor: pointer; }
+.tier input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.tier-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--ultra-soft);
+  transition: background .18s, color .18s, transform .18s;
+}
+.tier:hover .tier-card { transform: translateY(-2px); }
+.tier-card b { font: 700 clamp(13px, 3.9vw, 15px)/1.15 var(--display); }
+.tier-card small { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--mist); }
+.tier input:checked + .tier-card { background: var(--gold); color: var(--ink); }
+.tier input:checked + .tier-card small { color: var(--ink); }
+.tier input:focus-visible + .tier-card { outline: 3px solid var(--coral); outline-offset: 2px; }
+.tier-note { font-size: 13.5px; color: var(--mist); min-height: 2.9em; }
+[data-for][hidden] { display: none !important; }
+.services { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.svc { position: relative; display: block; cursor: pointer; }
+.svc input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.svc-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  padding: 10px 4px 9px;
+  border-radius: 12px;
+  background: var(--ultra-soft);
+  text-align: center;
+  transition: background .18s, color .18s, transform .18s;
+}
+.svc-card i { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--gold); color: var(--ultra); }
+.svc-card svg { width: 19px; height: 19px; }
+.svc-card b { font: 700 12px/1.15 var(--body); }
+.svc:hover .svc-card { transform: translateY(-2px); }
+.svc input:checked + .svc-card { background: #fff; color: var(--ink); }
+.svc input:checked + .svc-card i { background: var(--ultra); color: var(--gold); }
+.svc input:focus-visible + .svc-card { outline: 3px solid var(--coral); outline-offset: 2px; }
+.svc-note { font-size: 13.5px; color: var(--mist); }
+.steppers.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.jobs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+[data-job][hidden], [data-pkg][hidden] { display: none !important; }
+.single-stepper { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.single-stepper .stepper-box { width: 150px; }
+.acre { font-size: 13px; color: var(--mist); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { position: relative; cursor: pointer; }
+.chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chip span { display: block; padding: 7px 12px; border-radius: 999px; background: var(--ultra-soft); font-size: 13px; font-weight: 600; }
+.chip input:checked + span { background: var(--gold); color: var(--ink); }
+.chip input:focus-visible + span { outline: 3px solid var(--coral); outline-offset: 2px; }
+
+.extras { display: flex; flex-direction: column; gap: 6px; }
+.extra {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+  cursor: pointer;
+}
+.extra:last-child { border-bottom: 1px solid var(--line); }
+.extra input { width: 20px; height: 20px; margin: 0; accent-color: var(--gold); cursor: pointer; }
+.extra span { font-weight: 600; }
+.extra small { font-size: 13px; color: var(--mist); font-variant-numeric: tabular-nums; }
+.extra-sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 0 8px 32px;
+  font-size: 14px;
+  color: var(--mist);
+}
+.extra-sub .stepper-box { width: 132px; height: 38px; }
+.extra-sub .stepper-box output { font-size: 18px; }
+.extra.off { opacity: .55; cursor: not-allowed; }
+.extra.off input { cursor: not-allowed; }
+
+/* ------- Estimate ------- */
+.quote {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-block: 14px max(16px, env(safe-area-inset-bottom, 0px));
+  padding-left: 26px;
+  padding-right: max(26px, env(safe-area-inset-right, 0px));
+  background: var(--ultra-deep);
+}
+.quote-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.quote-label { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mist); }
+.price {
+  font: 800 clamp(2rem, 3vw, 2.5rem)/1.05 var(--display);
+  letter-spacing: -.02em;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.price-unit { font-size: 12px; color: var(--mist); text-align: right; }
+.price.is-quote { font-size: 1.55rem; white-space: normal; }
+.book {
+  position: relative;
+  width: 100%;
+  padding: 16px 18px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--gold);
+  color: var(--ink);
+  font: 800 19px/1.1 var(--display);
+  box-shadow: 0 6px 0 #C99400;
+  transition: transform .12s, box-shadow .12s;
+}
+.book:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #C99400; }
+.book:active { transform: translateY(4px); box-shadow: 0 2px 0 #C99400; }
+.fine { font-size: 12px; line-height: 1.35; color: var(--mist); }
+.quote details { font-size: 13px; color: var(--mist); }
+.quote summary { cursor: pointer; font-weight: 600; color: #fff; }
+.quote dl { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; margin: 6px 0 0; }
+.quote dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.contact { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 14px; font-size: 12.5px; color: var(--mist); }
+.contact a { color: #fff; font-weight: 600; }
+
+/* ------- Booking dialog ------- */
+dialog {
+  width: min(560px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: var(--foam);
+  color: var(--ink);
+  overflow: auto;
+}
+dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
+.dlg-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px;
+  background: var(--ultra);
+  color: #fff;
+}
+.dlg-head h2 { font: 800 25px/1.1 var(--display); }
+.dlg-head p { margin-top: 4px; font-size: 14px; color: var(--gold); font-weight: 600; }
+.x {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ultra-soft);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+}
+.dlg-body { display: flex; flex-direction: column; gap: 14px; padding: 18px 22px 22px; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field.wide { grid-column: 1 / -1; }
+.field label, .pay legend { padding: 0; font-size: 13.5px; font-weight: 700; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 2px solid #C7D3EC;
+  border-radius: 10px;
+  background: #fff;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--ultra); outline: none; }
+.field.bad input, .field.bad select { border-color: var(--coral); }
+.err { display: none; font-size: 13px; font-weight: 600; color: #B5301F; }
+.field.bad .err { display: block; }
+.pay { display: flex; flex-wrap: wrap; gap: 8px; border: 0; margin: 0; padding: 0; }
+.pay legend { margin-bottom: 6px; }
+.pay label { position: relative; cursor: pointer; }
+.pay input { position: absolute; opacity: 0; inset: 0; margin: 0; }
+.pay span { display: block; padding: 9px 13px; border: 2px solid #C7D3EC; border-radius: 999px; font-size: 14px; font-weight: 600; background: #fff; }
+.pay input:checked + span { background: var(--ultra); border-color: var(--ultra); color: #fff; }
+.pay input:focus-visible + span { outline: 3px solid var(--coral); outline-offset: 2px; }
+.submit, .wa {
+  display: block;
+  width: 100%;
+  padding: 15px 18px;
+  border: 0;
+  border-radius: 14px;
+  text-align: center;
+  text-decoration: none;
+  font: 800 18px/1.15 var(--display);
+}
+.submit { background: var(--ultra); color: #fff; }
+.wa { background: var(--wa); color: #fff; }
+.ghost {
+  width: 100%;
+  padding: 11px;
+  border: 2px solid #C7D3EC;
+  border-radius: 12px;
+  background: none;
+  font-weight: 700;
+}
+.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.summary {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 14px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+#confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* ------- Phone and narrow screens ------- */
+@media (max-width: 960px) {
+  html, body { height: auto; }
+  .stage { position: sticky; top: 0; inset-inline: 0; height: 42svh; min-height: 290px; z-index: 1; }
+  .quote { gap: 8px; padding-block: 10px max(12px, env(safe-area-inset-bottom, 0px)); }
+  .quote .fine { display: none; }
+  .price { font-size: 1.85rem; }
+  .book { padding: 13px 16px; font-size: 17px; }
+  .brand { top: max(12px, env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); max-width: calc(100vw - 32px); }
+  .logo-badge { --s: 46px; }
+  .logo-text b { font-size: 16px; }
+  .logo-text span { font-size: 12px; }
+  h1 { margin-top: 8px; font-size: clamp(1.45rem, 6vw, 2rem); }
+  .lede, .drag-hint { display: none; }
+  .dock { left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: 10px; gap: 8px; }
+  .peek { padding: 9px 13px; font-size: 14px; }
+  .paint { padding: 5px 9px; }
+  .paint > span { display: none; }
+  .swatch { width: 24px; height: 24px; }
+  .legend { order: -1; width: 100%; font-size: 12px; padding: 6px 10px; }
+  .panel { position: relative; z-index: 2; width: auto; top: auto; left: 0; }
+  .panel::before {
+    top: -13px;
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: auto;
+    height: 14px;
+    background: radial-gradient(circle at 50% 100%, var(--ultra) 12px, transparent 13px) 0 0 / 24px 14px repeat-x;
+  }
+  .controls {
+    overflow: visible;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 18px;
+  }
+  .quote {
+    z-index: 4;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .quote details, .contact { display: none; }
+  .quote.stuck-open details, .quote.stuck-open .contact { display: block; }
+}
+@media (max-width: 960px) {
+  .after { display: flex; flex-direction: column; gap: 10px; padding-top: 2px; font-size: 13px; color: var(--mist); }
+  .after a { color: #fff; font-weight: 600; }
+}
+@media (min-width: 961px) { .after { display: none; } }
+@media (max-height: 800px) and (min-width: 961px) {
+  .controls { gap: 13px; padding-block: 16px 12px; }
+  .tier-note { min-height: 0; }
+  h1 { font-size: clamp(2.2rem, 4vw, 3.6rem); }
+  .price { font-size: 2rem; }
+  .book { padding: 13px 16px; font-size: 17px; }
+}
+@media (max-width: 420px) { .fields { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* WebGL or the 3D library unavailable: the estimator keeps working */
+.no3d #scene, .no3d .peek, .no3d .paint, .no3d .drag-hint { display: none; }
+</style>
+</head>
+<body>
+
+<section class="stage" id="stage" aria-label="3D model of your home">
+  <canvas id="scene" role="img" aria-label="A mini 3D model of the home you described, on a small tropical island"></canvas>
+
+  <header class="brand">
+    <div class="logo">
+      <span class="logo-badge"><img src="logo.jpeg" alt="246 Home Care logo" width="64" height="64"></span>
+      <div class="logo-text"><b>246 Home Care</b><span>Everything your home needs, one call away.</span></div>
+    </div>
+    <h1>Build your house. See <em>your price.</em></h1>
+    <p class="lede">Tell us about your home and watch it take shape. Your estimate updates with every change.</p>
+  </header>
+
+  <p class="fallback-note" id="fallbackNote" hidden>Your estimate still works here. The 3D model needs a browser with WebGL turned on.</p>
+
+  <div class="dock">
+    <div class="legend" id="legend" hidden></div>
+    <button class="peek" id="peek" type="button" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 20V10m14 10V10"/><path d="M12 4v-2"/></svg>
+      <span id="peekText">Lift the roof</span>
+    </button>
+    <div class="paint" role="group" aria-label="Paint your model">
+      <span>Paint it</span>
+      <button class="swatch" type="button" style="--c:#FFD76A" data-c="#FFD76A" aria-label="Sunshine yellow" aria-pressed="true"></button>
+      <button class="swatch" type="button" style="--c:#FF9E80" data-c="#FF9E80" aria-label="Coral" aria-pressed="false"></button>
+      <button class="swatch" type="button" style="--c:#7FE3D4" data-c="#7FE3D4" aria-label="Sea green" aria-pressed="false"></button>
+      <button class="swatch" type="button" style="--c:#F7B8D3" data-c="#F7B8D3" aria-label="Bougainvillea pink" aria-pressed="false"></button>
+    </div>
+    <span class="drag-hint">Drag to spin. Click the roof to look inside.</span>
+  </div>
+</section>
+
+<main class="panel">
+  <form class="controls" id="controls" onsubmit="return false">
+    <fieldset class="group">
+      <legend class="label">Choose a service</legend>
+      <div class="services" style="margin-top:9px">
+        <label class="svc"><input type="radio" name="service" value="cleaning" checked><span class="svc-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/></svg></i><b>House Cleaning</b></span></label>
+        <label class="svc"><input type="radio" name="service" value="windows"><span class="svc-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M12 4v16M4 12h16"/></svg></i><b>Window Cleaning</b></span></label>
+        <label class="svc"><input type="radio" name="service" value="landscaping"><span class="svc-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19c0-8 6-14 14-14 0 8-6 14-14 14z"/><path d="M5 19l8-8"/></svg></i><b>Landscaping</b></span></label>
+        <label class="svc"><input type="radio" name="service" value="pressure"><span class="svc-card"><i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c4 5 6 8.2 6 11a6 6 0 0 1-12 0c0-2.8 2-6 6-11z"/></svg></i><b>Pressure Washing</b></span></label>
+        <label class="svc"><input type="radio" name="service" value="patio"><span class="svc-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a9 5 0 0 1 18 0z"/><path d="M12 10v10M8 20h8"/></svg></i><b>Patio Cleaning</b></span></label>
+        <label class="svc"><input type="radio" name="service" value="repairs"><span class="svc-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="15.5" cy="8.5" r="3.5"/><path d="M13 11l-8 8"/></svg></i><b>Repairs &amp; Home Help</b></span></label>
+        <label class="svc"><input type="radio" name="service" value="laundry"><span class="svc-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 7h16l-2 13H6z"/><circle cx="12" cy="13" r="2.6"/></svg></i><b>Laundry Pickup</b></span></label>
+        <label class="svc"><input type="radio" name="service" value="truck"><span class="svc-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M2 6h12v10H2zM14 10h4l3 3v3h-7z"/><circle cx="6" cy="18" r="1.8" fill="currentColor"/><circle cx="17" cy="18" r="1.8" fill="currentColor"/></svg></i><b>Truck &amp; Freight</b></span></label>
+        <label class="svc"><input type="radio" name="service" value="packages"><span class="svc-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 8l9-5 9 5-9 5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></i><b>Packages</b></span></label>
+      </div>
+      <p class="svc-note" id="svcNote"></p>
+    </fieldset>
+
+    <div class="group" data-for="cleaning">
+      <div class="sqft-row">
+        <label class="label" for="num-sqft">Home size</label>
+        <span class="sqft-value"><input class="num" id="num-sqft" data-key="sqft" type="number" inputmode="numeric" min="500" max="6000" step="50" value="1500"><span>sq ft</span></span>
+      </div>
+      <input type="range" data-key="sqft" min="500" max="6000" step="50" value="1500" aria-label="Home size slider">
+    </div>
+
+    <div class="group" data-for="landscaping">
+      <div class="sqft-row">
+        <label class="label" for="num-lot">Lot size</label>
+        <span class="sqft-value"><input class="num" id="num-lot" data-key="lot" type="number" inputmode="numeric" min="1000" max="43560" step="250" value="5000"><span>sq ft</span></span>
+      </div>
+      <input type="range" data-key="lot" min="1000" max="43560" step="250" value="5000" aria-label="Lot size slider">
+      <span class="acre" id="lotAcres"></span>
+    </div>
+
+    <div class="group" data-for="pressure">
+      <div class="sqft-row">
+        <label class="label" for="num-area">Area to wash</label>
+        <span class="sqft-value"><input class="num" id="num-area" data-key="area" type="number" inputmode="numeric" min="200" max="5000" step="50" value="1000"><span>sq ft</span></span>
+      </div>
+      <input type="range" data-key="area" min="200" max="5000" step="50" value="1000" aria-label="Area to wash slider">
+      <div class="chips" role="group" aria-label="Surfaces to wash">
+        <label class="chip"><input type="checkbox" name="surf" value="Driveway" checked><span>Driveway</span></label>
+        <label class="chip"><input type="checkbox" name="surf" value="Patio or pool deck"><span>Patio or pool deck</span></label>
+        <label class="chip"><input type="checkbox" name="surf" value="Walkways"><span>Walkways</span></label>
+        <label class="chip"><input type="checkbox" name="surf" value="Exterior walls"><span>Exterior walls</span></label>
+      </div>
+    </div>
+
+    <div class="group" data-for="patio">
+      <div class="sqft-row">
+        <label class="label" for="num-patio">Patio size</label>
+        <span class="sqft-value"><input class="num" id="num-patio" data-key="patio" type="number" inputmode="numeric" min="100" max="1500" step="25" value="300"><span>sq ft</span></span>
+      </div>
+      <input type="range" data-key="patio" min="100" max="1500" step="25" value="300" aria-label="Patio size slider">
+    </div>
+
+    <div class="group" data-for="windows">
+      <div class="steppers two">
+        <div class="stepper"><span class="label" id="lbl-wc2">Windows</span>
+          <div class="stepper-box" data-key="windowCount" role="group" aria-labelledby="lbl-wc2"><button type="button" data-d="-1" aria-label="Fewer windows">&minus;</button><output>6</output><button type="button" data-d="1" aria-label="More windows">+</button></div></div>
+        <div class="stepper"><span class="label" id="lbl-fl2">Floors</span>
+          <div class="stepper-box" data-key="floors" role="group" aria-labelledby="lbl-fl2"><button type="button" data-d="-1" aria-label="Fewer floors">&minus;</button><output>1</output><button type="button" data-d="1" aria-label="More floors">+</button></div></div>
+      </div>
+    </div>
+
+    <fieldset class="group" data-for="repairs">
+      <legend class="label">Type of job</legend>
+      <div class="jobs" style="margin-top:9px">
+        <label class="tier"><input type="radio" name="job" value="plumbing" checked><span class="tier-card"><b>Plumbing</b><small>Quote after call</small></span></label>
+        <label class="tier"><input type="radio" name="job" value="tiling"><span class="tier-card"><b>Tiling</b><small>Quote after call</small></span></label>
+        <label class="tier"><input type="radio" name="job" value="appliances"><span class="tier-card"><b>Appliances</b><small>Quote after call</small></span></label>
+        <label class="tier"><input type="radio" name="job" value="homehelp"><span class="tier-card"><b>Home help</b><small>$35&ndash;50/hr</small></span></label>
+        <label class="tier"><input type="radio" name="job" value="handyman"><span class="tier-card"><b>Handyman</b><small>Quote after call</small></span></label>
+      </div>
+      <p class="tier-note" id="jobNote"></p>
+    </fieldset>
+    <div class="group" data-for="repairs">
+      <div class="single-stepper" data-job="homehelp"><span class="label" id="lbl-hours">Estimated hours</span>
+        <div class="stepper-box" data-key="hours" role="group" aria-labelledby="lbl-hours"><button type="button" data-d="-1" aria-label="Fewer hours">&minus;</button><output>2</output><button type="button" data-d="1" aria-label="More hours">+</button></div></div>
+      <div data-job="tiling">
+        <div class="sqft-row">
+          <label class="label" for="num-tileArea">Area to tile</label>
+          <span class="sqft-value"><input class="num" id="num-tileArea" data-key="tileArea" type="number" inputmode="numeric" min="10" max="500" step="5" value="50"><span>sq ft</span></span>
+        </div>
+        <input type="range" data-key="tileArea" min="10" max="500" step="5" value="50" aria-label="Area to tile slider">
+      </div>
+      <div class="chips" role="group" aria-label="Appliances to repair" data-job="appliances">
+        <label class="chip"><input type="checkbox" name="appl" value="Washing machine" checked><span>Washing machine</span></label>
+        <label class="chip"><input type="checkbox" name="appl" value="Fridge"><span>Fridge</span></label>
+        <label class="chip"><input type="checkbox" name="appl" value="Dryer"><span>Dryer</span></label>
+        <label class="chip"><input type="checkbox" name="appl" value="Stove or oven"><span>Stove or oven</span></label>
+        <label class="chip"><input type="checkbox" name="appl" value="Freezer"><span>Freezer</span></label>
+      </div>
+      <div class="chips" role="group" aria-label="Home help tasks" data-job="homehelp">
+        <label class="chip"><input type="checkbox" name="task" value="Curtains and blinds" checked><span>Curtains &amp; blinds</span></label>
+        <label class="chip"><input type="checkbox" name="task" value="Moving furniture"><span>Moving furniture</span></label>
+        <label class="chip"><input type="checkbox" name="task" value="Dog walking"><span>Dog walking</span></label>
+        <label class="chip"><input type="checkbox" name="task" value="Errands"><span>Errands</span></label>
+        <label class="chip"><input type="checkbox" name="task" value="Furniture assembly"><span>Furniture assembly</span></label>
+      </div>
+      <p class="svc-note" data-job="homehelp">Not sure how long? Leave it at 2 hours and tell us what you need when you book.</p>
+      <p class="svc-note" data-job="plumbing tiling appliances handyman">Book a free discovery call. We talk through the job, look at your photos and give you a price before any work starts.</p>
+    </div>
+
+    <div class="group" data-for="laundry">
+      <div class="single-stepper"><span class="label" id="lbl-loads">Loads</span>
+        <div class="stepper-box" data-key="loads" role="group" aria-labelledby="lbl-loads"><button type="button" data-d="-1" aria-label="Fewer loads">&minus;</button><output>2</output><button type="button" data-d="1" aria-label="More loads">+</button></div></div>
+    </div>
+
+    <fieldset class="group" data-for="packages">
+      <legend class="label">Choose a package</legend>
+      <div class="tiers" style="margin-top:9px">
+        <label class="tier"><input type="radio" name="pkg" value="villa" checked><span class="tier-card"><b>Villa Care</b><small>Weekly, monthly fee</small></span></label>
+        <label class="tier"><input type="radio" name="pkg" value="lite"><span class="tier-card"><b>Villa Care Lite</b><small>Every 2 weeks</small></span></label>
+        <label class="tier"><input type="radio" name="pkg" value="refresh"><span class="tier-card"><b>One-Time Refresh</b><small>Flat price</small></span></label>
+      </div>
+      <p class="tier-note" id="pkgNote"></p>
+    </fieldset>
+    <div class="group" data-for="packages">
+      <div class="single-stepper"><span class="label" id="lbl-pkgbeds">Bedrooms</span>
+        <div class="stepper-box" data-key="beds" role="group" aria-labelledby="lbl-pkgbeds"><button type="button" data-d="-1" aria-label="Fewer bedrooms">&minus;</button><output>3</output><button type="button" data-d="1" aria-label="More bedrooms">+</button></div></div>
+      <div class="chips" role="group" aria-label="Type of clean in the Refresh" data-pkg="refresh">
+        <label class="chip"><input type="radio" name="refreshClean" value="standard" checked><span>Standard clean</span></label>
+        <label class="chip"><input type="radio" name="refreshClean" value="deep"><span>Deep clean (+$185)</span></label>
+      </div>
+    </div>
+
+    <fieldset class="group" data-for="truck">
+      <legend class="label">How much are we moving?</legend>
+      <div class="tiers" style="margin-top:9px">
+        <label class="tier"><input type="radio" name="load" value="small" checked><span class="tier-card"><b>Small</b><small>A few items</small></span></label>
+        <label class="tier"><input type="radio" name="load" value="medium"><span class="tier-card"><b>Medium</b><small>About a room</small></span></label>
+        <label class="tier"><input type="radio" name="load" value="full"><span class="tier-card"><b>Full truck</b><small>House move</small></span></label>
+      </div>
+    </fieldset>
+
+    <div class="group" data-for="cleaning">
+      <div class="steppers">
+        <div class="stepper"><span class="label" id="lbl-floors">Floors</span>
+          <div class="stepper-box" data-key="floors" role="group" aria-labelledby="lbl-floors"><button type="button" data-d="-1" aria-label="Fewer floors">&minus;</button><output>1</output><button type="button" data-d="1" aria-label="More floors">+</button></div></div>
+        <div class="stepper"><span class="label" id="lbl-beds">Bedrooms</span>
+          <div class="stepper-box" data-key="beds" role="group" aria-labelledby="lbl-beds"><button type="button" data-d="-1" aria-label="Fewer bedrooms">&minus;</button><output>3</output><button type="button" data-d="1" aria-label="More bedrooms">+</button></div></div>
+        <div class="stepper"><span class="label" id="lbl-baths">Bathrooms</span>
+          <div class="stepper-box" data-key="baths" role="group" aria-labelledby="lbl-baths"><button type="button" data-d="-1" aria-label="Fewer bathrooms">&minus;</button><output>2</output><button type="button" data-d="1" aria-label="More bathrooms">+</button></div></div>
+      </div>
+      <p class="hint" id="hint" hidden></p>
+    </div>
+
+    <fieldset class="group" data-for="cleaning">
+      <legend class="label">Type of cleaning</legend>
+      <div class="tiers" style="margin-top:9px">
+        <label class="tier"><input type="radio" name="tier" id="tier-standard" value="standard" checked><span class="tier-card"><b>Standard</b><small>from $185</small></span></label>
+        <label class="tier"><input type="radio" name="tier" id="tier-deep" value="deep"><span class="tier-card"><b>Deep</b><small>from $340</small></span></label>
+        <label class="tier"><input type="radio" name="tier" id="tier-moveout" value="moveout"><span class="tier-card"><b>Move-Out</b><small>from $440</small></span></label>
+      </div>
+      <p class="tier-note" id="tierNote"></p>
+    </fieldset>
+
+    <fieldset class="group" data-for="cleaning">
+      <legend class="label">Make it even better</legend>
+      <div class="extras" style="margin-top:9px">
+        <label class="extra"><input type="checkbox" id="addWindows"><span>Window cleaning</span><small>$15&ndash;25 per window</small></label>
+        <div class="extra-sub" id="windowCountRow" hidden>
+          <span id="lbl-windowCount">How many windows?</span>
+          <div class="stepper-box" data-key="windowCount" role="group" aria-labelledby="lbl-windowCount"><button type="button" data-d="-1" aria-label="Fewer windows">&minus;</button><output>6</output><button type="button" data-d="1" aria-label="More windows">+</button></div>
+        </div>
+        <label class="extra"><input type="checkbox" id="addLaundry"><span>Laundry pickup &amp; drop-off</span><small>+$25&ndash;40</small></label>
+      </div>
+    </fieldset>
+
+    <div class="group" id="recurringWrap">
+      <div class="extras">
+        <label class="extra" id="recurringRow"><input type="checkbox" id="recurring"><span id="recurringText">Book biweekly or more</span><small>Save 10%</small></label>
+      </div>
+    </div>
+
+    <div class="after">
+      <p class="fine" id="fineMobile"></p>
+      <span>246-263-7048 &nbsp;&middot;&nbsp; <a href="https://www.instagram.com/246homecarebb/" target="_blank" rel="noopener">@246HomecareBB</a></span>
+    </div>
+  </form>
+
+  <div class="quote" id="quote">
+    <div class="quote-top" aria-live="polite">
+      <div>
+        <div class="quote-label">Your estimate</div>
+        <div class="price" id="price">$220 &ndash; $280</div>
+      </div>
+      <div class="price-unit" id="priceUnit">BBD per visit<br>VAT inclusive</div>
+    </div>
+    <button class="book" id="book" type="button">Book This Cleaning</button>
+    <p class="fine" id="fine">This is an estimate based on the information provided. Final price will be confirmed upon photo review or on-site walkthrough prior to booking.</p>
+    <details>
+      <summary>How we worked this out</summary>
+      <dl id="breakdown"></dl>
+    </details>
+    <div class="contact"><span>246-263-7048</span><a href="https://www.instagram.com/246homecarebb/" target="_blank" rel="noopener">@246HomecareBB</a></div>
+  </div>
+</main>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <div class="dlg-head">
+    <div>
+      <h2 id="dlgTitle">Book your cleaning</h2>
+      <p id="dlgSub"></p>
+    </div>
+    <button class="x" id="dlgClose" type="button" aria-label="Close booking form">&times;</button>
+  </div>
+
+  <form class="dlg-body" id="bookForm" novalidate>
+    <div class="fields">
+      <div class="field"><label for="f-name">Your name</label><input id="f-name" name="name" autocomplete="name" required><span class="err">Please add your name.</span></div>
+      <div class="field"><label for="f-phone">WhatsApp or phone</label><input id="f-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required><span class="err">Please add a number with at least 7 digits.</span></div>
+      <div class="field"><label for="f-parish">Parish</label>
+        <select id="f-parish" name="parish" required>
+          <option value="">Choose a parish</option>
+          <option>St. James</option><option>St. Peter</option><option>St. Michael</option><option>Christ Church</option><option>St. Thomas</option><option>St. Lucy</option><option>Another parish</option>
+        </select><span class="err">Please choose a parish.</span></div>
+      <div class="field"><label for="f-address" id="addrLabel">Address</label><input id="f-address" name="address" autocomplete="street-address" required><span class="err">Please add the address.</span></div>
+      <div class="field wide" id="dropoffField" hidden><label for="f-dropoff">Drop-off address</label><input id="f-dropoff" name="dropoff"><span class="err">Please add where we are taking it.</span></div>
+      <div class="field"><label for="f-date">Preferred date</label><input id="f-date" name="date" type="date" required><span class="err">Please choose a date from tomorrow onwards.</span></div>
+      <div class="field"><label for="f-time">Preferred time</label>
+        <select id="f-time" name="time"><option>Morning</option><option>Afternoon</option><option>Any time</option></select></div>
+      <div class="field wide"><label for="f-notes">Anything we should know? (optional)</label><textarea id="f-notes" name="notes" rows="2" placeholder="Pets, gate codes, rooms that need extra attention"></textarea></div>
+    </div>
+    <fieldset class="pay">
+      <legend>How would you like to pay?</legend>
+      <label><input type="radio" name="pay" value="Online bank transfer" checked><span>Online bank transfer</span></label>
+      <label><input type="radio" name="pay" value="Card (WiPay / PowerTranz)"><span>Card link</span></label>
+      <label><input type="radio" name="pay" value="Cash"><span>Cash</span></label>
+    </fieldset>
+    <button class="submit" type="submit">Continue to WhatsApp</button>
+    <p class="fine" id="dlgFine" style="color:#40507C"></p>
+  </form>
+
+  <div class="dlg-body" id="doneView" hidden>
+    <ol class="steps">
+      <li><strong>Press send in WhatsApp.</strong> Your details are already filled in.</li>
+      <li id="stepPhotos"><strong>Share 5 to 8 photos</strong> of the kitchen, bathrooms and living areas in the same chat.</li>
+      <li>We confirm your final price and date.</li>
+    </ol>
+    <a class="wa" id="waLink" href="#" target="_blank" rel="noopener">Open WhatsApp</a>
+    <div class="summary" id="waText"></div>
+    <button class="ghost" id="copyBtn" type="button">Copy these details</button>
+    <p class="fine" style="color:#40507C">No WhatsApp? Message or call 246-263-7048 with the details above.</p>
+  </div>
+  <canvas id="confetti" hidden></canvas>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+<script>
+/* ==========================================================================
+   PRICING: every number that sets the estimate lives in this block.
+   All amounts are BBD, VAT inclusive.
+   ========================================================================== */
+const PRICING = {
+  sizeFixedShare: 0.25,    // share of a base price that does not move with size
+  sizeScaledShare: 0.75,   // share of a base price that moves with size
+  minimumShare: 1.0,       // no estimate drops below this share of its base price (1.0 = full base)
+  extraFloorRate: 0.10,    // per floor above the first (cleaning and windows)
+  recurringDiscount: 0.10, // biweekly or more
+  walkthroughOver: 500,    // estimates above this get an on-site walkthrough
+  cleaning: {
+    anchorSqft: 1500,      // homes larger than this pay more; smaller homes pay the bedroom price
+    extraBathroom: 25,     // per bathroom above 2
+    singleBathroomCredit: 10,
+    tiers: {                // starting price for a 1-bedroom home, plus bedStep for each extra bedroom
+      standard: { name: 'Standard Clean', low: 185, high: 245, bedStep: 20,
+        note: 'Kitchen, bathrooms, living areas, floors and dusting.' },
+      deep: { name: 'Deep Clean', low: 340, high: 400, bedStep: 35,
+        note: 'A top-to-bottom reset. Ideal for first-time clients and post-construction homes.' },
+      moveout: { name: 'Move-Out Clean', low: 440, high: 520, bedStep: 45,
+        note: 'For the day the boxes leave. A thorough clean so you can hand over the keys with confidence.' }
+    },
+    windowsAddOn: { perWindowLow: 15, perWindowHigh: 25 },
+    laundryAddOn: { low: 25, high: 40 }
+  },
+  windows: { perWindowLow: 15, perWindowHigh: 25 },
+  landscaping: { low: 150, high: 225, anchor: 5000 }, // per visit, for a 5,000 sq ft lot (starts at $150)
+  pressure: { low: 200, high: 300, anchor: 1000 },    // for 1,000 sq ft of surface (starts at $200)
+  patio: { low: 90, high: 140, anchor: 300 },         // for a 300 sq ft patio
+  repairs: {                                          // only home help has a set rate; the rest are quoted after a discovery call
+    plumbing: { name: 'Plumbing' },
+    tiling: { name: 'Tiling' },
+    appliances: { name: 'Appliance repair' },
+    homehelp: { name: 'Home help', hourLow: 35, hourHigh: 50 },
+    handyman: { name: 'General handyman' }
+  },
+  laundry: { loadLow: 25, loadHigh: 40 },             // per load, two-load minimum
+  truck: {
+    loads: {                                          // per trip, driver included; $150 is the most any trip costs
+      small: { low: 80, high: 100 },
+      medium: { low: 100, high: 125 },
+      full: { low: 125, high: 150 }
+    }
+  }
+};
+const PACKAGES = {
+  villa: { name: 'Villa Care', unit: 'BBD per month',
+    note: 'Weekly cleaning, windows every two weeks, weekly laundry pickup and priority booking.',
+    prices: { 2: [1050, 1450], 3: [1150, 1600], 4: [1600, 2200] } },
+  lite: { name: 'Villa Care Lite', unit: 'BBD per month',
+    note: 'Cleaning every two weeks, monthly windows and laundry pickup every two weeks.',
+    prices: { 2: [525, 745], 3: [600, 825], 4: [825, 1125] } },
+  refresh: { name: 'One-Time Refresh', unit: 'BBD flat price',
+    note: 'A full clean, pressure washing up to 1,000 sq ft and all your windows in one visit. Ideal for move-in day or an Airbnb turnover.',
+    prices: { 2: [575, 575], 3: [625, 625], 4: [775, 775] }, deepExtra: 185 }
+};
+const JOB_NOTES = {
+  plumbing: 'Leaks, taps, toilets, drains and pipes.',
+  tiling: 'Floor and wall tiles, repairs or new areas. Tell us roughly how big the area is.',
+  appliances: 'Washing machines, fridges, dryers, stoves and freezers. Pick the ones that need fixing.',
+  homehelp: 'Curtains and blinds, moving furniture, dog walking and errands. Priced by the hour.',
+  handyman: 'Fixtures, fittings and small fixes around the house.'
+};
+
+const SERVICES = {
+  cleaning: { name: 'House Cleaning', note: 'Priced by home size, bedrooms, bathrooms and floors.', book: 'Book This Cleaning', unit: 'BBD per visit', photos: 'of the kitchen, bathrooms and living areas' },
+  windows: { name: 'Window Cleaning', note: 'Inside and out, screens included. Each floor above the first adds 10%.', book: 'Book Window Cleaning', unit: 'BBD per visit', photos: 'of your windows, including any on upper floors' },
+  landscaping: { name: 'Landscaping', note: 'Cutting, edging, hedge trimming and clearing debris. Priced by lot size.', book: 'Book Landscaping', unit: 'BBD per visit', photos: 'of the yard, hedges and any overgrown areas' },
+  pressure: { name: 'Pressure Washing', note: 'Driveways, patios, pool decks and exterior walls. Priced by surface area.', book: 'Book Pressure Washing', unit: 'BBD per visit', photos: 'of each surface you want washed' },
+  patio: { name: 'Patio Cleaning', note: 'Sweep, scrub and wipe down your patio furniture. Priced by patio size.', book: 'Book Patio Cleaning', unit: 'BBD per visit', photos: 'of the patio and furniture' },
+  repairs: { name: 'Repairs & Home Help', note: 'Choose the type of job below.', book: 'Book This Job', unit: 'BBD plus parts', photos: 'of what needs doing' },
+  laundry: { name: 'Laundry Pickup & Drop-off', note: 'We collect, wash, dry, fold and bring it back. Two-load minimum.', book: 'Book Laundry Pickup', unit: 'BBD per pickup', photos: null },
+  packages: { name: 'Packages', note: 'Bundle your services and save. Priced by number of bedrooms.', book: 'Book This Package', unit: 'BBD', photos: 'of the main rooms and outdoor areas' },
+  truck: { name: 'Truck & Freighting', note: 'Furniture, appliances and goods moved across the island. Driver included, $150 max per trip.', book: 'Book This Trip', unit: 'BBD per trip', photos: 'of the items and both locations' }
+};
+const LOAD_NAMES = { small: 'Small load (a few items)', medium: 'Medium load (about a room)', full: 'Full truck' };
+const RECURRING = new Set(['cleaning', 'windows', 'landscaping', 'pressure', 'patio', 'laundry']);
+
+const roundTo5 = n => Math.round(n / 5) * 5;
+const money = n => '$' + Math.round(n).toLocaleString('en-US');
+const span = (a, b) => money(roundTo5(a)) + ' – ' + money(roundTo5(b));
+const n0 = v => v.toLocaleString('en-US');
+const acres = v => (v / 43560).toFixed(2);
+const cap = w => w[0].toUpperCase() + w.slice(1);
+const recurringAllowed = s => RECURRING.has(s.service) && !(s.service === 'cleaning' && s.tier === 'moveout');
+const sizeFactor = (size, anchor) => PRICING.sizeFixedShare + PRICING.sizeScaledShare * (size / anchor);
+
+function homeLine(s) {
+  return n0(s.sqft) + ' sq ft, ' + s.floors + ' floor' + (s.floors > 1 ? 's' : '') + ', ' + s.beds + ' bed, ' + s.baths + ' bath';
+}
+
+function estimate(s) {
+  const p = PRICING, rows = [], details = [];
+  let low = 0, high = 0;
+  switch (s.service) {
+    case 'cleaning': {
+      // Price climbs with every bedroom from a 1-bedroom starting price; size only adds for homes over 1,500 sq ft
+      const c = p.cleaning, tier = c.tiers[s.tier];
+      const f = Math.max(1, sizeFactor(s.sqft, c.anchorSqft));
+      const bedLow = tier.low + tier.bedStep * (s.beds - 1), bedHigh = tier.high + tier.bedStep * (s.beds - 1);
+      const bathAdj = s.baths > 2 ? (s.baths - 2) * c.extraBathroom : s.baths < 2 ? -c.singleBathroomCredit : 0;
+      const floorF = 1 + p.extraFloorRate * (s.floors - 1);
+      low = (bedLow * f + bathAdj) * floorF;
+      high = (bedHigh * f + bathAdj) * floorF;
+      rows.push([tier.name + ', 1 bedroom', span(tier.low, tier.high)]);
+      if (s.beds > 1) rows.push([(s.beds - 1) + ' more bedroom' + (s.beds > 2 ? 's' : '') + ' × $' + tier.bedStep, '+' + money(tier.bedStep * (s.beds - 1))]);
+      if (f > 1) rows.push(['Home size (' + n0(s.sqft) + ' sq ft)', '× ' + f.toFixed(2)]);
+      if (bathAdj) rows.push(['Bathrooms', (bathAdj > 0 ? '+' : '−') + money(Math.abs(bathAdj))]);
+      if (s.floors > 1) rows.push(['Floors', '× ' + floorF.toFixed(2)]);
+      details.push('Type: ' + tier.name, 'Home: ' + homeLine(s));
+      const extras = [];
+      if (s.windows) {
+        const a = c.windowsAddOn;
+        low += a.perWindowLow * s.windowCount; high += a.perWindowHigh * s.windowCount;
+        rows.push(['Windows (' + s.windowCount + ' × $15–25)', '+' + span(a.perWindowLow * s.windowCount, a.perWindowHigh * s.windowCount)]);
+        extras.push('Window cleaning (' + s.windowCount + ' windows)');
+      }
+      if (s.laundry) {
+        low += c.laundryAddOn.low; high += c.laundryAddOn.high;
+        rows.push(['Laundry', '+' + span(c.laundryAddOn.low, c.laundryAddOn.high)]);
+        extras.push('Laundry pickup & drop-off');
+      }
+      details.push('Extras: ' + (extras.join(', ') || 'None'));
+      if (s.recurring && recurringAllowed(s)) { low *= 1 - p.recurringDiscount; high *= 1 - p.recurringDiscount; rows.push(['Biweekly discount', '−10%']); }
+      // Never below the 1-bedroom starting price
+      if (low < tier.low) { low = tier.low; high = Math.max(high, tier.high); rows.push(['Minimum price', span(tier.low, tier.high)]); }
+      rows.push(['Rounded to the nearest $5', '']);
+      return { low: roundTo5(low), high: roundTo5(high), rows, details, recurringApplies: s.recurring && recurringAllowed(s) };
+    }
+case 'windows': {
+      const w = p.windows, ff = 1 + p.extraFloorRate * (s.floors - 1);
+      low = w.perWindowLow * s.windowCount * ff; high = w.perWindowHigh * s.windowCount * ff;
+      rows.push([s.windowCount + ' windows × $15–25', span(w.perWindowLow * s.windowCount, w.perWindowHigh * s.windowCount)]);
+      if (s.floors > 1) rows.push([s.floors + ' floors', '× ' + ff.toFixed(2)]);
+      details.push('Windows: ' + s.windowCount, 'Floors: ' + s.floors);
+      break;
+    }
+    case 'landscaping':
+    case 'pressure':
+    case 'patio': {
+      const key = { landscaping: 'lot', pressure: 'area', patio: 'patio' }[s.service];
+      const what = { landscaping: 'lot', pressure: 'surface area', patio: 'patio' }[s.service];
+      const b = p[s.service], f = sizeFactor(s[key], b.anchor);
+      low = Math.max(b.low * f, b.low * p.minimumShare); high = Math.max(b.high * f, b.high * p.minimumShare);
+      rows.push(['Base for a ' + n0(b.anchor) + ' sq ft ' + what, span(b.low, b.high)],
+        [cap(what) + ' (' + n0(s[key]) + ' sq ft)', '× ' + f.toFixed(2)]);
+      if (f < 1) rows.push(['Minimum charge applies', '']);
+      details.push(cap(what) + ': ' + n0(s[key]) + ' sq ft' + (key === 'lot' ? ' (about ' + acres(s.lot) + ' acre)' : ''));
+      if (s.service === 'pressure') details.push('Surfaces: ' + (s.surfaces.join(', ') || 'Not sure yet'));
+      break;
+    }
+    case 'repairs': {
+      const job = p.repairs[s.job];
+      details.push('Job type: ' + job.name);
+      if (s.job === 'homehelp') {
+        const hrs = s.hours + ' hour' + (s.hours > 1 ? 's' : '');
+        low = job.hourLow * s.hours; high = job.hourHigh * s.hours;
+        rows.push([hrs + ' × ' + span(job.hourLow, job.hourHigh), span(low, high)]);
+        details.push('Estimated time: ' + hrs, 'Tasks: ' + (s.tasks.join(', ') || 'To discuss'));
+        break;
+      }
+      // Plumbing, tiling, appliances and handyman jobs are priced after a discovery call
+      if (s.job === 'tiling') details.push('Area to tile: about ' + n0(s.tileArea) + ' sq ft');
+      if (s.job === 'appliances') details.push('Appliances: ' + (s.appliances.join(', ') || 'Not sure yet'));
+      return { quote: true, low: 0, high: 0, rows: [['Price', 'Given after a discovery call'], ['Parts and materials', 'At cost']], details, recurringApplies: false };
+    }
+    case 'laundry': {
+      const l = p.laundry;
+      low = l.loadLow * s.loads; high = l.loadHigh * s.loads;
+      rows.push([s.loads + ' loads × $25–40', span(low, high)]);
+      details.push('Loads: ' + s.loads);
+      break;
+    }
+    case 'packages': {
+      const pk = PACKAGES[s.pkg], band = s.beds <= 2 ? 2 : s.beds;
+      details.push('Bedrooms: ' + s.beds);
+      if (band > 4) {
+        details.push('Clean type: ' + (s.pkg === 'refresh' ? (s.refreshClean === 'deep' ? 'Deep' : 'Standard') : 'Standard'));
+        return { quote: true, quoteText: 'Quote after walkthrough', low: 0, high: 0, rows: [['5+ bedrooms', 'Priced after a walkthrough']], details, recurringApplies: false };
+      }
+      [low, high] = pk.prices[band];
+      rows.push([pk.name + ', ' + (band === 2 ? '1–2' : band) + ' bedrooms', low === high ? money(low) : span(low, high)]);
+      if (s.pkg === 'refresh') {
+        details.push('Clean type: ' + (s.refreshClean === 'deep' ? 'Deep' : 'Standard'));
+        if (s.refreshClean === 'deep') { low += pk.deepExtra; high += pk.deepExtra; rows.push(['Deep clean upgrade', '+' + money(pk.deepExtra)]); }
+      }
+      rows.push([s.pkg === 'refresh' ? 'Bundle saving included' : 'Package and recurring savings included', '']);
+      return { low, high, rows, details, recurringApplies: false, unit: pk.unit };
+    }
+    case 'truck': {
+      const base = p.truck.loads[s.load];
+      low = base.low; high = base.high;
+      rows.push([LOAD_NAMES[s.load] + ', per trip', span(base.low, base.high)]);
+      details.push('Load: ' + LOAD_NAMES[s.load]);
+      break;
+    }
+  }
+  const recurringApplies = s.recurring && recurringAllowed(s);
+  if (recurringApplies) { low *= 1 - p.recurringDiscount; high *= 1 - p.recurringDiscount; rows.push(['Biweekly discount', '−10%']); }
+  rows.push(['Rounded to the nearest $5', '']);
+  return { low: roundTo5(low), high: roundTo5(high), rows, details, recurringApplies };
+}
+
+/* ==========================================================================
+   State and interface
+   ========================================================================== */
+const state = {
+  service: 'cleaning',
+  sqft: 1500, floors: 1, beds: 3, baths: 2, tier: 'standard', windows: false, windowCount: 6, laundry: false, recurring: false,
+  lot: 5000, area: 1000, surfaces: ['Driveway'], patio: 300, hours: 2, loads: 2, load: 'small', km: 10, helpers: 0,
+  pkg: 'villa', refreshClean: 'standard',
+  job: 'plumbing', tileArea: 50, appliances: ['Washing machine'], tasks: ['Curtains and blinds']
+};
+const LIMITS = { floors: [1, 3], beds: [1, 8], baths: [1, 7], windowCount: [1, 40], hours: [1, 8], loads: [2, 12] };
+const RANGES = { sqft: [500, 6000, 50], lot: [1000, 43560, 250], area: [200, 5000, 50], patio: [100, 1500, 25], tileArea: [10, 500, 5] };
+const $ = id => document.getElementById(id);
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Keeps the page working if the animation library cannot load
+const tween = window.gsap || {
+  to(o, v) { for (const k in v) if (k in o) o[k] = v[k]; v.onUpdate && v.onUpdate(); v.onComplete && v.onComplete(); },
+  fromTo(o, a, v) { this.to(o, v); },
+  killTweensOf() {}
+};
+const T = d => (REDUCED ? 0 : d);
+
+const shown = { low: 220, high: 280 };
+let quoteMode = false, quoteText = 'Quote after call';
+function paintPrice() {
+  $('price').textContent = quoteMode ? quoteText : Math.round(shown.low) === Math.round(shown.high) ? money(shown.low) : money(shown.low) + ' – ' + money(shown.high);
+  $('price').classList.toggle('is-quote', quoteMode);
+}
+
+function refreshUI() {
+  const s = state, e = estimate(s), meta = SERVICES[s.service];
+  quoteMode = !!e.quote;
+  quoteText = e.quoteText || 'Quote after call';
+  if (quoteMode) paintPrice();
+  tween.killTweensOf(shown);
+  tween.to(shown, { low: e.low, high: e.high, duration: T(.5), ease: 'power2.out', onUpdate: paintPrice });
+  if (REDUCED) paintPrice();
+
+  document.querySelectorAll('[data-for]').forEach(el => { el.hidden = !el.dataset.for.split(' ').includes(s.service); });
+  $('svcNote').textContent = meta.note;
+  document.querySelectorAll('[data-job]').forEach(el => { el.hidden = !el.dataset.job.split(' ').includes(s.job); });
+  $('jobNote').textContent = JOB_NOTES[s.job];
+  $('tierNote').textContent = PRICING.cleaning.tiers[s.tier].note;
+  $('windowCountRow').hidden = !s.windows;
+
+  Object.keys(LIMITS).forEach(k => document.querySelectorAll('.stepper-box[data-key="' + k + '"]').forEach(box => {
+    box.querySelector('output').textContent = s[k];
+    box.querySelector('[data-d="-1"]').disabled = s[k] <= LIMITS[k][0];
+    box.querySelector('[data-d="1"]').disabled = s[k] >= LIMITS[k][1];
+  }));
+  Object.keys(RANGES).forEach(k => {
+    const [mn, mx] = RANGES[k];
+    const r = document.querySelector('input[type="range"][data-key="' + k + '"]');
+    r.value = s[k];
+    r.style.setProperty('--pct', ((s[k] - mn) / (mx - mn) * 100).toFixed(1) + '%');
+    const n = document.querySelector('input.num[data-key="' + k + '"]');
+    if (n && document.activeElement !== n) n.value = s[k];
+  });
+  $('lotAcres').textContent = 'About ' + acres(s.lot) + ' acre';
+
+  $('recurringWrap').hidden = !RECURRING.has(s.service);
+  const blocked = s.service === 'cleaning' && s.tier === 'moveout';
+  $('recurring').disabled = blocked;
+  $('recurringRow').classList.toggle('off', blocked);
+  $('recurringText').textContent = blocked ? 'Recurring is not available on a Move-Out' : 'Book biweekly or more';
+
+  $('book').textContent = quoteMode ? (s.service === 'packages' ? 'Book a Walkthrough' : 'Book a Discovery Call') : meta.book;
+  $('priceUnit').innerHTML = quoteMode ? 'Free visit<br>no obligation' : (e.unit || meta.unit) + '<br>VAT inclusive';
+  document.querySelectorAll('[data-pkg]').forEach(el => { el.hidden = !el.dataset.pkg.split(' ').includes(s.pkg); });
+  $('pkgNote').textContent = PACKAGES[s.pkg].note;
+
+  const hint = $('hint');
+  const tight = s.service === 'cleaning' && s.sqft / (s.beds + s.baths + 2) < 110;
+  hint.hidden = !tight;
+  if (tight) hint.textContent = 'That is a lot of rooms for ' + n0(s.sqft) + ' sq ft. Check your size so your estimate stays accurate.';
+
+  const fine = 'This is an estimate based on the information provided. Final price will be confirmed upon photo review or on-site walkthrough prior to booking.';
+  $('fine').textContent = $('fineMobile').textContent = $('dlgFine').textContent =
+    quoteMode ? 'We price this job after a short discovery call, so you know the cost before any work starts. Parts and materials are extra, at cost.'
+    : e.high > PRICING.walkthroughOver ? fine + ' Jobs at this level get a quick walkthrough with us first.' : fine;
+
+  const dl = $('breakdown');
+  dl.textContent = '';
+  e.rows.forEach(([a, b]) => {
+    const dt = document.createElement('dt'), dd = document.createElement('dd');
+    dt.textContent = a; dd.textContent = b;
+    dl.append(dt, dd);
+  });
+
+  const legend = $('legend');
+  legend.textContent = '';
+  [['#FFB9A8', s.beds + ' bedroom' + (s.beds > 1 ? 's' : '')],
+   ['#8FE8EC', s.baths + ' bathroom' + (s.baths > 1 ? 's' : '')],
+   ['#FFE08A', 'Kitchen'], ['#B6EBA6', 'Living room']].forEach(([c, label]) => {
+    const el = document.createElement('span'), i = document.createElement('i');
+    i.style.setProperty('--c', c);
+    el.append(i, label);
+    legend.append(el);
+  });
+}
+
+let rebuildQueued = false;
+function update(animate) {
+  refreshUI();
+  if (rebuildQueued) return;
+  rebuildQueued = true;
+  requestAnimationFrame(() => { rebuildQueued = false; if (window.scene3D) window.scene3D.sync(animate); });
+}
+
+document.querySelectorAll('input[name="service"]').forEach(r => r.addEventListener('change', () => {
+  state.service = r.value;
+  update(true);
+}));
+document.querySelectorAll('.stepper-box').forEach(box => {
+  box.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const key = box.dataset.key, [lo, hi] = LIMITS[key];
+    state[key] = Math.min(hi, Math.max(lo, state[key] + Number(btn.dataset.d)));
+    update(true);
+  });
+});
+document.querySelectorAll('input[type="range"][data-key]').forEach(r => r.addEventListener('input', () => {
+  state[r.dataset.key] = Number(r.value);
+  update(false);
+}));
+document.querySelectorAll('input.num[data-key]').forEach(n => {
+  const k = n.dataset.key, [mn, mx, st] = RANGES[k];
+  n.addEventListener('input', () => {
+    const v = Number(n.value);
+    if (v >= mn && v <= mx) { state[k] = v; update(false); }
+  });
+  n.addEventListener('change', () => {
+    const v = Math.min(mx, Math.max(mn, Math.round((Number(n.value) || state[k]) / st) * st));
+    state[k] = v;
+    n.value = v;
+    update(false);
+  });
+});
+document.querySelectorAll('input[name="tier"]').forEach(r => r.addEventListener('change', () => { state.tier = r.value; update(true); }));
+document.querySelectorAll('input[name="load"]').forEach(r => r.addEventListener('change', () => { state.load = r.value; update(true); }));
+document.querySelectorAll('input[name="pkg"]').forEach(r => r.addEventListener('change', () => { state.pkg = r.value; update(true); }));
+document.querySelectorAll('input[name="refreshClean"]').forEach(r => r.addEventListener('change', () => { state.refreshClean = r.value; update(true); }));
+document.querySelectorAll('input[name="job"]').forEach(r => r.addEventListener('change', () => { state.job = r.value; update(true); }));
+[['surf', 'surfaces', false], ['appl', 'appliances', true], ['task', 'tasks', true]].forEach(([name, key, rebuild]) => {
+  document.querySelectorAll('input[name="' + name + '"]').forEach(c => c.addEventListener('change', () => {
+    state[key] = [...document.querySelectorAll('input[name="' + name + '"]:checked')].map(x => x.value);
+    update(rebuild);
+  }));
+});
+[['addWindows', 'windows'], ['addLaundry', 'laundry'], ['recurring', 'recurring']].forEach(([id, key]) => {
+  $(id).addEventListener('change', e => { state[key] = e.target.checked; update(true); });
+});
+
+/* ==========================================================================
+   Booking
+   ========================================================================== */
+const dlg = $('dlg'), form = $('bookForm');
+const WHATSAPP_NUMBER = '12462637048';
+
+function tomorrow() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+const serviceLabel = s => s.service === 'cleaning' ? PRICING.cleaning.tiers[s.tier].name : s.service === 'packages' ? PACKAGES[s.pkg].name : SERVICES[s.service].name;
+
+$('book').addEventListener('click', () => {
+  const e = estimate(state), truck = state.service === 'truck';
+  $('dlgTitle').textContent = state.service === 'cleaning' ? 'Book your cleaning' : 'Book ' + SERVICES[state.service].name;
+  $('dlgSub').textContent = e.quote
+    ? (state.service === 'packages' ? PACKAGES[state.pkg].name + '. Priced after a walkthrough' : PRICING.repairs[state.job].name + '. Price given after a discovery call')
+    : serviceLabel(state) + '. Estimate ' + (e.low === e.high ? money(e.low) : money(e.low) + ' – ' + money(e.high)) + ' ' + (e.unit || 'BBD');
+  $('dropoffField').hidden = !truck;
+  $('addrLabel').textContent = truck ? 'Pickup address' : 'Address';
+  $('f-date').min = tomorrow();
+  form.hidden = false;
+  $('doneView').hidden = true;
+  dlg.showModal();
+});
+$('dlgClose').addEventListener('click', () => dlg.close());
+dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+
+const checks = {
+  'f-name': v => v.trim().length > 1,
+  'f-phone': v => v.replace(/\D/g, '').length >= 7,
+  'f-parish': v => !!v,
+  'f-address': v => v.trim().length > 3,
+  'f-dropoff': v => state.service !== 'truck' || v.trim().length > 3,
+  'f-date': v => !!v && v >= tomorrow()
+};
+Object.keys(checks).forEach(id => $(id).addEventListener('input', () => {
+  if (checks[id]($(id).value)) $(id).closest('.field').classList.remove('bad');
+}));
+
+function bookingMessage(d) {
+  const s = state, e = estimate(s), meta = SERVICES[s.service], truck = s.service === 'truck';
+  const lines = [
+    "Hi 246 Home Care, I'd like to book " + (s.service === 'cleaning' ? 'a cleaning' : s.service === 'packages' ? 'the ' + PACKAGES[s.pkg].name + ' package' : meta.name) + '.',
+    '',
+    'Service: ' + serviceLabel(s)
+  ].concat(e.details);
+  if (RECURRING.has(s.service)) lines.push('Frequency: ' + (e.recurringApplies ? 'Biweekly or more' : 'One visit'));
+  lines.push(e.quote
+      ? (s.service === 'packages' ? 'Estimate: Please arrange a walkthrough and give me a price.' : 'Estimate: Please call me to discuss the job and give me a price.')
+      : 'Estimate: BBD ' + (e.low === e.high ? money(e.low) : money(e.low) + ' - ' + money(e.high)) + (e.unit ? ' ' + e.unit.replace('BBD ', '') : '') + ' (VAT incl.)',
+    '',
+    'Name: ' + d.name.trim(),
+    'Phone: ' + d.phone.trim(),
+    'Parish: ' + d.parish,
+    (truck ? 'Pickup address: ' : 'Address: ') + d.address.trim());
+  if (truck) lines.push('Drop-off address: ' + d.dropoff.trim());
+  lines.push('Preferred: ' + d.date + ', ' + d.time, 'Payment: ' + d.pay);
+  if (d.notes.trim()) lines.push('Notes: ' + d.notes.trim());
+  lines.push('', meta.photos ? "I'll share 5-8 photos " + meta.photos + ' next.' : "I'll have the laundry bagged and ready for pickup.");
+  return lines.join('\n');
+}
+
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  let first = null;
+  Object.keys(checks).forEach(id => {
+    const ok = checks[id]($(id).value);
+    $(id).closest('.field').classList.toggle('bad', !ok);
+    if (!ok && !first) first = $(id);
+  });
+  if (first) { first.focus(); return; }
+
+  const text = bookingMessage(Object.fromEntries(new FormData(form)));
+  const url = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text);
+  const meta = SERVICES[state.service], big = estimate(state).high > PRICING.walkthroughOver;
+  $('waLink').href = url;
+  $('waText').textContent = text;
+  $('stepPhotos').innerHTML = meta.photos
+    ? '<strong>Share 5 to 8 photos</strong> ' + meta.photos + ' in the same chat' + (big ? ', and we will arrange a quick walkthrough.' : '.')
+    : '<strong>Have your laundry bagged</strong> and ready for pickup.';
+  form.hidden = true;
+  $('doneView').hidden = false;
+  $('dlgTitle').textContent = 'One last step';
+  dlg.scrollTop = 0;
+  confetti();
+  try { window.open(url, '_blank', 'noopener'); } catch (err) { /* the button below still works */ }
+});
+
+$('copyBtn').addEventListener('click', async () => {
+  const btn = $('copyBtn');
+  try {
+    await navigator.clipboard.writeText($('waText').textContent);
+    btn.textContent = 'Copied';
+  } catch (err) {
+    const r = document.createRange();
+    r.selectNodeContents($('waText'));
+    const sel = getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+    btn.textContent = 'Selected. Press copy on your device';
+  }
+  setTimeout(() => { btn.textContent = 'Copy these details'; }, 2500);
+});
+
+function confetti() {
+  if (REDUCED) return;
+  const c = $('confetti'), x = c.getContext('2d');
+  c.hidden = false;
+  c.width = innerWidth;
+  c.height = innerHeight;
+  const colors = ['#00267F', '#FFC726', '#12C4C9', '#FF6B57', '#FFFFFF'];
+  const bits = Array.from({ length: 150 }, () => ({
+    x: c.width / 2, y: c.height * .35,
+    vx: (Math.random() - .5) * 15, vy: -Math.random() * 13 - 3,
+    s: 5 + Math.random() * 7, r: Math.random() * 6, vr: (Math.random() - .5) * .4,
+    col: colors[Math.floor(Math.random() * colors.length)]
+  }));
+  const start = performance.now();
+  (function frame(now) {
+    x.clearRect(0, 0, c.width, c.height);
+    bits.forEach(b => {
+      b.vy += .28; b.vx *= .99; b.x += b.vx; b.y += b.vy; b.r += b.vr;
+      x.save(); x.translate(b.x, b.y); x.rotate(b.r);
+      x.fillStyle = b.col; x.fillRect(-b.s / 2, -b.s / 3, b.s, b.s * .66);
+      x.restore();
+    });
+    if (now - start < 2600) requestAnimationFrame(frame);
+    else { x.clearRect(0, 0, c.width, c.height); c.hidden = true; }
+  })(start);
+}
+
+refreshUI();
+paintPrice();
+
+/* ==========================================================================
+   The 3D island
+   ========================================================================== */
+(function initScene() {
+  const stage = $('stage'), canvas = $('scene');
+  function noWebGL() {
+    document.documentElement.classList.add('no3d');
+    $('fallbackNote').hidden = false;
+  }
+  if (typeof THREE === 'undefined' || !THREE.OrbitControls) return noWebGL();
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  } catch (err) { return noWebGL(); }
+
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const scene = new THREE.Scene();
+  const HORIZON = '#FFF3C9';
+  scene.fog = new THREE.Fog(col(HORIZON), 70, 260);
+  const camera = new THREE.PerspectiveCamera(30, 1, .1, 800);
+  camera.position.set(22, 15, 30);
+
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enablePan = false;
+  controls.enableZoom = false;
+  controls.enableDamping = true;
+  controls.dampingFactor = .07;
+  controls.minPolarAngle = .55;
+  controls.maxPolarAngle = 1.42;
+  controls.autoRotate = !REDUCED;
+  controls.autoRotateSpeed = .45;
+  controls.target.set(0, 2, 0);
+
+  function col(hex) { return new THREE.Color(hex).convertSRGBToLinear(); }
+  const materials = {};
+  function mat(hex, extra) {
+    const key = hex + JSON.stringify(extra || {});
+    if (!materials[key]) materials[key] = new THREE.MeshStandardMaterial(Object.assign({ color: col(hex), roughness: .78, flatShading: true }, extra));
+    return materials[key];
+  }
+  const BOX = new THREE.BoxGeometry(1, 1, 1);
+  const CONE = new THREE.ConeGeometry(1, 1, 4);
+  const CYL = new THREE.CylinderGeometry(1, 1, 1, 10);
+  function box(parent, w, h, d, x, y, z, m, shadow) {
+    const o = new THREE.Mesh(BOX, typeof m === 'string' ? mat(m) : m);
+    o.scale.set(w, h, d);
+    o.position.set(x, y, z);
+    o.castShadow = shadow !== false;
+    o.receiveShadow = true;
+    parent.add(o);
+    return o;
+  }
+
+  /* Light */
+  scene.add(new THREE.HemisphereLight(col('#FFFFFF'), col('#9FE6C8'), .72));
+  const sun = new THREE.DirectionalLight(col('#FFF4DC'), .95);
+  sun.position.set(24, 42, 20);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: 1, far: 110 });
+  sun.shadow.bias = -.0006;
+  sun.shadow.normalBias = .03;
+  scene.add(sun);
+
+  /* Sky */
+  const sky = new THREE.Mesh(
+    new THREE.SphereGeometry(400, 24, 16),
+    new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false, fog: false,
+      vertexShader: 'varying vec3 p; void main(){ p = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+      fragmentShader: `varying vec3 p;
+        void main(){
+          float h = clamp(normalize(p).y, 0.0, 1.0);
+          vec3 low = vec3(1.0, 0.953, 0.788), mid = vec3(0.651, 0.933, 0.941), top = vec3(0.17, 0.72, 0.92);
+          vec3 c = mix(low, mid, smoothstep(0.0, 0.12, h));
+          c = mix(c, top, smoothstep(0.1, 0.55, h));
+          gl_FragColor = vec4(c, 1.0);
+        }`
+    })
+  );
+  scene.add(sky);
+
+  function canvasTexture(w, h, draw) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    draw(c.getContext('2d'), w, h);
+    const t = new THREE.CanvasTexture(c);
+    t.encoding = THREE.sRGBEncoding;
+    return t;
+  }
+
+  const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: canvasTexture(256, 256, (x, w) => {
+      const g = x.createRadialGradient(w / 2, w / 2, 8, w / 2, w / 2, w / 2);
+      g.addColorStop(0, 'rgba(255,240,170,1)'); g.addColorStop(.28, 'rgba(255,214,90,1)');
+      g.addColorStop(.32, 'rgba(255,214,90,.35)'); g.addColorStop(1, 'rgba(255,214,90,0)');
+      x.fillStyle = g; x.fillRect(0, 0, w, w);
+    }), transparent: true, depthWrite: false, fog: false
+  }));
+  sunGlow.scale.setScalar(70);
+  sunGlow.position.set(-150, 80, -240);
+  scene.add(sunGlow);
+
+  /* Sea */
+  const seaGeo = new THREE.RingGeometry(9, 300, 72, 28);
+  seaGeo.rotateX(-Math.PI / 2);
+  const seaPos = seaGeo.attributes.position, seaColors = new Float32Array(seaPos.count * 3);
+  const shallow = col('#9CF3E2'), lagoon = col('#16CCD0'), deep = col('#0A86C4'), tmp = new THREE.Color();
+  for (let i = 0; i < seaPos.count; i++) {
+    const r = Math.hypot(seaPos.getX(i), seaPos.getZ(i));
+    if (r < 26) tmp.copy(shallow).lerp(lagoon, Math.max(0, (r - 14) / 12));
+    else tmp.copy(lagoon).lerp(deep, Math.min(1, (r - 26) / 70));
+    seaColors.set([tmp.r, tmp.g, tmp.b], i * 3);
+  }
+  seaGeo.setAttribute('color', new THREE.BufferAttribute(seaColors, 3));
+  const sea = new THREE.Mesh(seaGeo, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: .35, metalness: .05 }));
+  sea.position.y = -.75;
+  sea.receiveShadow = true;
+  scene.add(sea);
+
+  /* Island */
+  const island = new THREE.Group();
+  scene.add(island);
+  function roughDisc(rTop, rBottom, h, y, hex, seed) {
+    const g = new THREE.CylinderGeometry(rTop, rBottom, h, 30, 1);
+    const pos = g.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const a = Math.atan2(pos.getZ(i), pos.getX(i));
+      const k = 1 + .045 * Math.sin(a * 3 + seed) + .03 * Math.sin(a * 7 + seed * 2);
+      pos.setX(i, pos.getX(i) * k);
+      pos.setZ(i, pos.getZ(i) * k);
+    }
+    const m = new THREE.Mesh(g, mat(hex));
+    m.position.y = y;
+    m.receiveShadow = true;
+    island.add(m);
+    return m;
+  }
+  roughDisc(13.4, 15, 1.4, -.82, '#FFE6AE', 1);
+  roughDisc(11.6, 12.2, .34, -.17, '#77D66A', 1.7);
+  const foam = new THREE.Mesh(new THREE.TorusGeometry(15.2, .22, 6, 48), mat('#FFFFFF', { transparent: true, opacity: .75 }));
+  foam.rotation.x = Math.PI / 2;
+  foam.position.y = -.7;
+  scene.add(foam);
+
+  // Garden path, flowers
+  for (let i = 0; i < 6; i++) box(island, 1.3, .08, .62, Math.sin(i * .9) * .35, .02, 5.7 + i * .95, '#FFF0CB', false);
+  const flowerHues = ['#FF6B57', '#FFC726', '#FF8DC0', '#FFFFFF'];
+  const flowerGeo = new THREE.IcosahedronGeometry(.17, 0);
+  for (let i = 0; i < 46; i++) {
+    const a = i * 2.399, r = 8.5 + (i * 37 % 26) / 10;
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (z > 5 && Math.abs(x) < 2) continue;
+    const f = new THREE.Mesh(flowerGeo, mat(flowerHues[i % 4]));
+    f.position.set(x, .12, z);
+    f.castShadow = true;
+    island.add(f);
+  }
+
+  // Palms
+  const fronds = [];
+  const frondGeo = new THREE.ConeGeometry(.42, 3.1, 4);
+  frondGeo.translate(0, 1.55, 0);
+  frondGeo.scale(1, 1, .22);
+  function palm(x, z, h, lean) {
+    const p = new THREE.Group();
+    p.position.set(x, 0, z);
+    p.rotation.y = Math.atan2(x, z) + Math.PI / 2;
+    // Trunk leans away from the house, ringed like a real coconut palm
+    const trunk = new THREE.Group();
+    trunk.rotation.z = lean * .28;
+    p.add(trunk);
+    const seg = 7;
+    for (let i = 0; i < seg; i++) {
+      const s = new THREE.Mesh(CYL, mat(i % 2 ? '#B98553' : '#A67244'));
+      const r = .27 - i * .022;
+      s.scale.set(r, h / seg + .02, r);
+      s.position.set(0, h / seg * (i + .5), 0);
+      s.castShadow = true;
+      trunk.add(s);
+    }
+    const crown = new THREE.Group();
+    crown.position.set(0, h, 0);
+    crown.rotation.z = -lean * .2;
+    trunk.add(crown);
+    for (let i = 0; i < 8; i++) {
+      const pivot = new THREE.Group();
+      pivot.rotation.y = i / 8 * Math.PI * 2;
+      const f = new THREE.Mesh(frondGeo, mat(i % 2 ? '#2FAE55' : '#1F9148'));
+      f.rotation.z = -1.25 - (i % 3) * .14;
+      f.castShadow = true;
+      pivot.add(f);
+      crown.add(pivot);
+    }
+    for (let i = 0; i < 3; i++) {
+      const n = new THREE.Mesh(flowerGeo, mat('#6B4A2B'));
+      n.scale.setScalar(1.4);
+      n.position.set(Math.cos(i * 2.1) * .22, -.15, Math.sin(i * 2.1) * .22);
+      crown.add(n);
+    }
+    fronds.push({ crown, phase: x + z });
+    island.add(p);
+  }
+  palm(-10.2, -4.4, 6.6, .9);
+  palm(-3.2, -10.2, 5.4, .7);
+  palm(4.4, -10.3, 6.8, 1);
+  palm(10.3, 1.6, 6.1, .85);
+  palm(-10.6, 3.6, 5.2, .7);
+  palm(-8.4, 7.9, 5.6, .9);
+
+  // Clouds
+  const clouds = [];
+  const cloudGeo = new THREE.IcosahedronGeometry(1, 1);
+  const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, flatShading: true, roughness: 1, emissive: 0xffffff, emissiveIntensity: .3 });
+  for (let i = 0; i < 7; i++) {
+    const c = new THREE.Group();
+    for (let j = 0; j < 5; j++) {
+      const b = new THREE.Mesh(cloudGeo, cloudMat);
+      b.position.set((j - 2) * 3.4, (j % 2) * 1.2, (j % 3) * 1.4);
+      b.scale.set(4 - Math.abs(j - 2) * .8, 2.4 - Math.abs(j - 2) * .3, 3);
+      c.add(b);
+    }
+    const a = i / 7 * Math.PI * 2;
+    c.position.set(Math.cos(a) * 130, 34 + (i % 3) * 13, Math.sin(a) * 130);
+    c.lookAt(0, c.position.y, 0);
+    c.userData.a = a;
+    clouds.push(c);
+    scene.add(c);
+  }
+
+  // A boat offshore
+  const boat = new THREE.Group();
+  box(boat, 3.8, .55, 1.3, 0, 0, 0, '#FFFFFF');
+  box(boat, .1, 4, .1, 0, 2.2, 0, '#7A5230');
+  const sailShape = new THREE.Shape();
+  sailShape.moveTo(0, 0); sailShape.lineTo(2.2, 0); sailShape.lineTo(0, 3.5); sailShape.closePath();
+  const sail = new THREE.Mesh(new THREE.ShapeGeometry(sailShape), mat('#FFC726', { side: THREE.DoubleSide }));
+  sail.position.set(.08, .5, 0);
+  boat.add(sail);
+  boat.position.set(-34, -.4, -30);
+  scene.add(boat);
+
+  /* The house */
+  const paint = new THREE.MeshStandardMaterial({ color: col('#FFD76A'), roughness: .8, flatShading: true });
+  const glass = new THREE.MeshStandardMaterial({ color: col('#2A4BA8'), roughness: .2, metalness: .3, emissive: col('#FFC726'), emissiveIntensity: 0 });
+  const ROOF = '#00267F', TRIM = '#FFFFFF', SHUTTER = '#12A5B0';
+  const ROOM_FLOOR = { bed: '#FFB9A8', bath: '#8FE8EC', kitchen: '#FFE08A', living: '#B6EBA6' };
+  const FLOOR_H = 1.75, WALL = .16, PEEK_GAP = 2.5;
+
+  const house = new THREE.Group();
+  scene.add(house);
+  let roofGroup = null, floorGroups = [], cutGroups = [], knownRooms = new Set(), knownFloors = 0;
+  let dims = { W: 6.5, D: 4.7, H: 3 };
+  let peeking = false;
+
+  function planFloors(s) {
+    const others = [];
+    let b = s.beds, t = s.baths, bi = 0, ti = 0;
+    while (b > 0 || t > 0) {
+      if (b > 0) { others.push({ id: 'bed' + bi++, type: 'bed' }); b--; }
+      if (t > 0) { others.push({ id: 'bath' + ti++, type: 'bath' }); t--; }
+    }
+    const all = [{ id: 'living', type: 'living' }, { id: 'kitchen', type: 'kitchen' }].concat(others);
+    const per = Math.ceil(all.length / s.floors), floors = [];
+    for (let i = 0; i < s.floors; i++) floors.push(all.slice(i * per, (i + 1) * per));
+    return floors;
+  }
+
+  function furnish(g, room, w, d) {
+    const u = Math.min(1, Math.min(w, d) / 1.9);
+    const part = (bw, bh, bd, x, y, z, m) => box(g, bw * u, bh * u, bd * u, x * u, y * u, z * u, m);
+    if (room.type === 'bed') {
+      part(1, .22, 1.5, 0, .2, -.05, '#C78F5A');
+      part(.94, .16, 1.42, 0, .38, -.05, '#FFFFFF');
+      part(.96, .1, .85, 0, .49, .24, ROOM_FLOOR.bath);
+      part(.72, .12, .28, 0, .52, -.58, '#FFE9A8');
+      part(.32, .34, .32, .72, .22, -.6, '#C78F5A');
+    } else if (room.type === 'bath') {
+      part(.62, .36, 1.2, -.42, .23, -.1, '#FFFFFF');
+      part(.46, .08, 1.02, -.42, .4, -.1, '#39C6E0');
+      part(.32, .3, .42, .48, .2, -.42, '#FFFFFF');
+      part(.34, .14, .14, .48, .44, -.62, '#FFFFFF');
+      part(.48, .34, .3, .46, .22, .52, '#E9F7FA');
+    } else if (room.type === 'kitchen') {
+      part(1.7, .46, .4, 0, .28, -.66, '#FFFFFF');
+      part(.42, .04, .32, -.42, .53, -.66, '#2B2F3A');
+      part(.9, .42, .5, 0, .26, .2, '#FF8A70');
+      part(.98, .05, .58, 0, .49, .2, '#FFFFFF');
+      part(.42, .92, .4, .68, .51, -.66, '#DDE6F5');
+    } else {
+      part(1.6, .03, 1.1, 0, .08, .1, '#FF6B57');
+      part(1.3, .26, .5, 0, .22, -.5, '#2F6BE0');
+      part(1.3, .36, .15, 0, .33, -.72, '#2F6BE0');
+      part(.6, .15, .36, 0, .17, .2, '#C78F5A');
+      if (state.floors > 1) for (let i = 0; i < 4; i++) part(.42, .22 * (i + 1), .22, .78, .11 * (i + 1) + .06, .1 + i * .22, '#C78F5A');
+    }
+  }
+
+  function addWindow(parent, x, z, rotY, wide, rid) {
+    const g = new THREE.Group();
+    g.position.set(x, FLOOR_H * .54, z);
+    g.rotation.y = rotY;
+    const w = Math.min(.62, wide * .3), h = .68;
+    box(g, w + .1, h + .1, .05, 0, 0, .09, TRIM, false);
+    box(g, w, h, .06, 0, 0, .11, glass, false);
+    box(g, .035, h, .08, 0, 0, .12, TRIM, false);
+    box(g, w, .035, .08, 0, 0, .12, TRIM, false);
+    box(g, w * .48, h + .08, .05, -(w * .76), 0, .1, SHUTTER, false);
+    box(g, w * .48, h + .08, .05, w * .76, 0, .1, SHUTTER, false);
+    g.userData.rid = rid;
+    parent.add(g);
+    return g;
+  }
+
+  function buildFloor(rooms, i, W, D, newRooms) {
+    const f = new THREE.Group();
+    f.userData.index = i;
+    f.userData.baseY = i * (FLOOR_H + .14);
+    f.position.y = f.userData.baseY;
+    box(f, W + .08, .14, D + .08, 0, .07, 0, TRIM);
+
+    // Rooms sit in two rows so every one of them reaches an outside wall
+    const n = rooms.length, frontCount = Math.ceil(n / 2), backCount = n - frontCount;
+    const rows = backCount ? [[rooms.slice(0, frontCount), 1], [rooms.slice(frontCount), -1]] : [[rooms, 0]];
+    const backWall = new THREE.Group(), cut = new THREE.Group();
+    f.add(backWall, cut);
+    const roomD = backCount ? (D - WALL) / 2 : D - WALL;
+    const popList = [];
+
+    rows.forEach(([row, side]) => {
+      const rw = (W - WALL) / row.length;
+      row.forEach((room, k) => {
+        const x = -W / 2 + WALL / 2 + rw * (k + .5);
+        const z = side * roomD / 2;
+        const g = new THREE.Group();
+        g.position.set(x, .14, z);
+        g.userData.rid = room.id;
+        box(g, rw - .05, .05, roomD - .05, 0, .03, 0, ROOM_FLOOR[room.type], false);
+        furnish(g, room, rw, roomD);
+        if (k < row.length - 1) box(g, .07, FLOOR_H * .82, roomD, rw / 2, FLOOR_H * .41, 0, '#FFFFFF');
+        f.add(g);
+        if (newRooms.has(room.id)) popList.push(g);
+
+        const isDoorSpot = i === 0 && room.id === 'living';
+        if (side >= 0 && !isDoorSpot) {
+          const win = addWindow(cut, x, D / 2 - .03, 0, rw, room.id);
+          if (newRooms.has(room.id)) popList.push(win);
+        }
+        if (side <= 0) {
+          const win = addWindow(backWall, x, -D / 2 + .03, Math.PI, rw, room.id);
+          if (newRooms.has(room.id)) popList.push(win);
+        }
+      });
+    });
+    if (backCount) box(f, W - WALL, FLOOR_H * .82, .07, 0, FLOOR_H * .41 + .1, 0, '#FFFFFF');
+
+    // Outer walls
+    const y = FLOOR_H / 2 + .07;
+    box(backWall, W, FLOOR_H, WALL, 0, y, -D / 2 + WALL / 2, paint);
+    box(backWall, WALL, FLOOR_H, D, -W / 2 + WALL / 2, y, 0, paint);
+    box(cut, W, FLOOR_H, WALL, 0, y, D / 2 - WALL / 2, paint);
+    box(cut, WALL, FLOOR_H, D, W / 2 - WALL / 2, y, 0, paint);
+    addWindow(cut, W / 2 - .03, 0, Math.PI / 2, D * .8, 'side');
+    addWindow(backWall, -W / 2 + .03, 0, -Math.PI / 2, D * .8, 'side');
+    // Timber corner boards
+    box(cut, .1, FLOOR_H, .1, W / 2 - .02, y, D / 2 - .02, TRIM);
+    box(backWall, .1, FLOOR_H, .1, -W / 2 + .02, y, D / 2 - .02, TRIM);
+    box(backWall, .1, FLOOR_H, .1, W / 2 - .02, y, -D / 2 + .02, TRIM);
+
+    if (i === 0) {
+      // Door, porch and steps at the living room
+      const rw = (W - WALL) / frontCount, dx = -W / 2 + WALL / 2 + rw * .5;
+      box(cut, .72, 1.22, .05, dx, .72, D / 2 + .02, '#FF6B57', false);
+      box(cut, .84, .08, .06, dx, 1.36, D / 2 + .02, TRIM, false);
+      box(cut, .06, .06, .06, dx + .22, .68, D / 2 + .06, '#FFC726', false);
+      box(f, 1.9, .14, 1.05, dx, .1, D / 2 + .52, '#C78F5A');
+      for (let s = 0; s < 2; s++) box(f, 1.1, .08, .3, dx, .04 - s * .02, D / 2 + 1.16 + s * .2, '#E7D4AA', false);
+      [-.86, .86].forEach(o => box(cut, .08, 1.5, .08, dx + o, .92, D / 2 + .94, TRIM));
+      box(cut, 2.1, .1, 1.3, dx, 1.72, D / 2 + .56, ROOF);
+    }
+
+    f.userData.cut = cut;
+    house.add(f);
+    return { f, popList };
+  }
+
+  function buildRoof(W, D, topY) {
+    const r = new THREE.Group();
+    const ov = .42, rh = Math.max(1.5, D * .36);
+    const shape = new THREE.Shape();
+    shape.moveTo(-D / 2 - ov, 0);
+    shape.lineTo(0, rh);
+    shape.lineTo(D / 2 + ov, 0);
+    shape.closePath();
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: W + ov * 2, bevelEnabled: false });
+    geo.translate(0, 0, -(W + ov * 2) / 2);
+    const prism = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: col(ROOF), roughness: .6, flatShading: true }));
+    prism.rotation.y = Math.PI / 2;
+    prism.castShadow = true;
+    prism.userData.roof = true;
+    r.add(prism);
+    box(r, W + ov * 2 + .08, .1, .3, 0, rh + .01, 0, '#FFC726').userData.roof = true;
+    // Corrugated ribs
+    for (let x = -W / 2 - ov + .4; x < W / 2 + ov; x += .62) {
+      const len = Math.hypot(D / 2 + ov, rh) + .02, tilt = Math.atan2(rh, D / 2 + ov);
+      [1, -1].forEach(side => {
+        const rib = box(r, .05, .05, len, x, rh / 2 + .03, side * (D / 2 + ov) / 2, '#123FB0', false);
+        rib.rotation.x = side * tilt;
+        rib.userData.roof = true;
+      });
+    }
+    // Fretwork along the eaves
+    [1, -1].forEach(side => {
+      for (let x = -W / 2 - ov + .16; x < W / 2 + ov; x += .3) {
+        const t = new THREE.Mesh(CONE, mat(TRIM));
+        t.scale.set(.15, -.26, .04);
+        t.rotation.y = Math.PI / 4;
+        t.position.set(x, -.12, side * (D / 2 + ov - .02));
+        r.add(t);
+      }
+    });
+    // Attic slab hides the rooms until the roof lifts
+    box(r, W, .08, D, 0, -.02, 0, TRIM).userData.roof = true;
+    r.position.y = topY;
+    r.userData.baseY = topY;
+    house.add(r);
+    return r;
+  }
+
+  function clearHouse() {
+    floorGroups.forEach(f => { tween.killTweensOf(f.position); });
+    if (roofGroup) tween.killTweensOf(roofGroup.position);
+    cutGroups.forEach(c => tween.killTweensOf(c.scale));
+    house.children.slice().forEach(c => {
+      if (c === roofGroup) c.traverse(o => { if (o.geometry && o.geometry.type === 'ExtrudeGeometry') { o.geometry.dispose(); o.material.dispose(); } });
+      house.remove(c);
+    });
+  }
+
+  function targetY(i) { return i * (FLOOR_H + .14) + (peeking ? i * PEEK_GAP : 0); }
+  function roofTargetY(topY, floors) { return topY + (peeking ? (floors - 1) * PEEK_GAP + 4 : 0); }
+
+  function rebuild(animate) {
+    const s = state;
+    const area = s.sqft / s.floors;
+    const W = Math.max(4.4, 6.6 * Math.pow(area / 1500, .42));
+    const D = Math.max(3.6, W * .74);
+    const plan = planFloors(s);
+    const ids = new Set(plan.flat().map(r => r.id));
+    const newRooms = new Set(animate ? [...ids].filter(id => !knownRooms.has(id)) : []);
+    const prevFloors = knownFloors;
+
+    clearHouse();
+    floorGroups = []; cutGroups = [];
+    const pops = [];
+    plan.forEach((rooms, i) => {
+      const { f, popList } = buildFloor(rooms, i, W, D, newRooms);
+      floorGroups.push(f);
+      cutGroups.push(f.userData.cut);
+      pops.push(...popList);
+    });
+    const topY = s.floors * (FLOOR_H + .14) + .02;
+    roofGroup = buildRoof(W, D, topY);
+    dims = { W, D, H: topY + D * .36 };
+    knownRooms = ids;
+    knownFloors = s.floors;
+
+    floorGroups.forEach((f, i) => {
+      f.position.y = targetY(i);
+      f.userData.cut.scale.y = peeking ? .12 : 1;
+    });
+    roofGroup.position.y = roofTargetY(topY, s.floors);
+    roofGroup.rotation.z = peeking ? .16 : 0;
+
+    if (animate && !REDUCED) {
+      floorGroups.forEach((f, i) => {
+        if (i >= prevFloors) tween.fromTo(f.position, { y: targetY(i) + 11 }, { y: targetY(i), duration: .8, ease: 'bounce.out', delay: (i - prevFloors) * .08 });
+      });
+      if (s.floors !== prevFloors) tween.fromTo(roofGroup.position, { y: roofGroup.position.y + 7 }, { y: roofGroup.position.y, duration: .9, ease: 'bounce.out', delay: .12 });
+      pops.forEach(p => { tween.fromTo(p.scale, { x: .01, y: .01, z: .01 }, { x: 1, y: 1, z: 1, duration: .55, ease: 'back.out(2.4)' }); });
+      tween.fromTo(house.scale, { x: 1.03, y: .95, z: 1.03 }, { x: 1, y: 1, z: 1, duration: .5, ease: 'elastic.out(1,.45)' });
+    }
+    frameCamera(animate);
+  }
+
+  /* Camera framing */
+  const view = { dist: 46, y: 2.6 };
+  function frameCamera(animate) {
+    const size = Math.max(stage.clientWidth, 1) / Math.max(stage.clientHeight, 1);
+    const desktop = innerWidth > 960;
+    const usable = desktop ? size * (1 - 432 / innerWidth) : size;
+    const extra = peeking ? (state.floors - 1) * PEEK_GAP + 5 : 0;
+    const needW = peeking ? Math.max(15, dims.W * 2.4) : Math.max(23, dims.W * 2.6);
+    const needH = (dims.H + extra) * (peeking ? 1.7 : 2.2) + (peeking ? 3 : 7);
+    const fit = Math.max(needW / usable, needH) / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
+    const dist = Math.max(25, fit * (desktop ? .9 : 1));
+    const y = Math.max(2.2, (dims.H + extra) * .42);
+    tween.killTweensOf(view);
+    tween.to(view, { dist, y, duration: animate ? T(.8) : 0, ease: 'power2.out' });
+  }
+
+  function setPeek(on) {
+    peeking = on;
+    $('peek').setAttribute('aria-pressed', on);
+    $('peekText').textContent = on ? 'Put the roof back' : 'Lift the roof';
+    $('legend').hidden = !on;
+    controls.autoRotate = !on && !REDUCED;
+    const d = T(.9);
+    floorGroups.forEach((f, i) => tween.to(f.position, { y: targetY(i), duration: d, ease: 'power3.inOut' }));
+    cutGroups.forEach(c => tween.to(c.scale, { y: on ? .12 : 1, duration: d, ease: 'power3.inOut' }));
+    if (roofGroup) {
+      tween.to(roofGroup.position, { y: roofTargetY(roofGroup.userData.baseY, state.floors), duration: d, ease: 'back.inOut(1.2)' });
+      tween.to(roofGroup.rotation, { z: on ? .16 : 0, duration: d, ease: 'power3.inOut' });
+    }
+    if (on) {
+      // Swing round to the open front corner of the dollhouse
+      const a = Math.atan2(camera.position.x, camera.position.z);
+      const state2 = { a };
+      const to = Math.PI * .22;
+      let diff = ((to - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+      tween.to(state2, {
+        a: a + diff, duration: d, ease: 'power2.inOut',
+        onUpdate() {
+          const r = Math.hypot(camera.position.x, camera.position.z), h = camera.position.y;
+          camera.position.set(Math.sin(state2.a) * r, Math.max(h, r * .62), Math.cos(state2.a) * r);
+        }
+      });
+    }
+    frameCamera(true);
+  }
+  $('peek').addEventListener('click', () => setPeek(!peeking));
+
+  /* Tier effects */
+  const sparkleTex = canvasTexture(64, 64, (x, w) => {
+    const c = w / 2;
+    const g = x.createRadialGradient(c, c, 0, c, c, c);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.2, 'rgba(255,240,170,.9)'); g.addColorStop(1, 'rgba(255,220,100,0)');
+    x.fillStyle = g;
+    x.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const r = i % 2 ? 5 : c, a = i / 8 * Math.PI * 2;
+      x.lineTo(c + Math.cos(a) * r, c + Math.sin(a) * r);
+    }
+    x.closePath();
+    x.fill();
+  });
+  const sparkleMat = new THREE.SpriteMaterial({ map: sparkleTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  const sparkles = [];
+  for (let i = 0; i < 34; i++) {
+    const s = new THREE.Sprite(sparkleMat);
+    s.userData = { nx: Math.random() * 1.5 - .75, ny: Math.random() * 1.15, nz: Math.random() * 1.5 - .75, p: Math.random() * 6.28, sp: 1 + Math.random() * 2 };
+    scene.add(s);
+    sparkles.push(s);
+  }
+
+  const bubbleGroup = new THREE.Group();
+  scene.add(bubbleGroup);
+  const bubbleGeo = new THREE.SphereGeometry(1, 12, 10);
+  const bubbleMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: .55, roughness: .08, metalness: .1, emissive: col('#BDF4FF'), emissiveIntensity: .35 });
+  const bubbles = [];
+  for (let i = 0; i < 44; i++) {
+    const b = new THREE.Mesh(bubbleGeo, bubbleMat);
+    b.userData = { a: Math.random() * 6.28, r: .55 + Math.random() * .3, y: Math.random() * 11, v: .5 + Math.random() * .9, s: .1 + Math.random() * .24 };
+    bubbleGroup.add(b);
+    bubbles.push(b);
+  }
+  // Foam piled round the walls
+  const foamPile = new THREE.Group();
+  for (let i = 0; i < 26; i++) {
+    const b = new THREE.Mesh(bubbleGeo, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .4, flatShading: true }));
+    b.userData.a = i / 26 * Math.PI * 2;
+    b.scale.setScalar(.34 + (i * 7 % 5) * .07);
+    foamPile.add(b);
+  }
+  bubbleGroup.add(foamPile);
+
+  const moveOut = new THREE.Group();
+  scene.add(moveOut);
+  const cardboard = ['#D9A766', '#C9935A', '#E2B67A'];
+  const moveBoxes = [
+    [-1.9, 8.1, .9], [-3, 8.2, .8], [-2.4, 7.3, .7], [-2.3, 8.1, .6], [-4.1, 7.5, .75], [2, 9.4, .7]
+  ].map(([x, z, s], i) => {
+    const b = box(moveOut, s, s * .78, s, x, s * .39 + (i === 3 ? .7 : 0), z, cardboard[i % 3]);
+    box(b, .16, 1.01, 1.01, 0, 0, 0, '#F4E2B8', false);
+    return b;
+  });
+  const truck = new THREE.Group();
+  box(truck, 2.8, 1.65, 1.5, -.4, 1.28, 0, '#FFFFFF');
+  box(truck, 1.05, 1.15, 1.46, 1.55, 1.02, 0, '#00267F');
+  box(truck, .55, .5, 1.48, 1.66, 1.2, 0, '#BFE9FF', false);
+  box(truck, 3.9, .22, 1.5, 0, .4, 0, '#FFC726');
+  [[-1.2, .78], [-1.2, -.78], [1.45, .78], [1.45, -.78]].forEach(([x, z]) => {
+    const w = new THREE.Mesh(CYL, mat('#22283A'));
+    w.scale.set(.34, .24, .34);
+    w.rotation.x = Math.PI / 2;
+    w.position.set(x, .34, z);
+    w.castShadow = true;
+    truck.add(w);
+  });
+  const decal = canvasTexture(512, 256, (x, w, h) => {
+    x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#00267F'; x.font = '800 118px "Bricolage Grotesque", Trebuchet MS, sans-serif';
+    x.textAlign = 'center'; x.fillText('246', w / 2, 118);
+    x.font = '700 50px "Bricolage Grotesque", Trebuchet MS, sans-serif'; x.fillText('Home Care', w / 2, 188);
+    x.fillStyle = '#FFC726'; x.fillRect(90, 210, w - 180, 14);
+  });
+  // Once the logo file loads, the truck carries the real badge
+  const logoImg = new Image();
+  logoImg.onload = () => {
+    const c = decal.image, x = c.getContext('2d'), S = 208 / .838;
+    x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, 512, 256);
+    x.save(); x.beginPath(); x.arc(128, 128, 104, 0, Math.PI * 2); x.clip();
+    x.drawImage(logoImg, 128 - .502 * S, 128 - .51 * S, S, S);
+    x.restore();
+    x.fillStyle = '#00267F'; x.textAlign = 'center';
+    x.font = '800 92px "Bricolage Grotesque", Trebuchet MS, sans-serif'; x.fillText('246', 380, 112);
+    x.font = '700 40px "Bricolage Grotesque", Trebuchet MS, sans-serif'; x.fillText('Home Care', 380, 162);
+    x.fillStyle = '#FFC726'; x.fillRect(282, 186, 196, 10);
+    decal.needsUpdate = true;
+  };
+  logoImg.src = 'logo.jpeg';
+  [1, -1].forEach(side => {
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 1.25), new THREE.MeshStandardMaterial({ map: decal, roughness: .7 }));
+    p.position.set(-.4, 1.28, side * .76);
+    if (side < 0) p.rotation.y = Math.PI;
+    truck.add(p);
+  });
+  truck.position.set(5.6, -.02, 8.3);
+  truck.rotation.y = -.3;
+  moveOut.add(truck);
+
+  /* Laundry line */
+  const laundry = new THREE.Group();
+  scene.add(laundry);
+  const lineStart = new THREE.Vector3(7.6, 2.05, -6.3), lineEnd = new THREE.Vector3(7.6, 2.05, -.6);
+  [lineStart, lineEnd].forEach(v => {
+    const pole = new THREE.Mesh(CYL, mat('#FFFFFF'));
+    pole.scale.set(.07, 2.1, .07);
+    pole.position.set(v.x, 1.05, v.z);
+    pole.castShadow = true;
+    laundry.add(pole);
+  });
+  const rope = new THREE.Mesh(CYL, mat('#6B7BA8'));
+  rope.scale.set(.02, 5.7, .02);
+  rope.rotation.x = Math.PI / 2;
+  rope.position.set(7.6, 2.05, -3.45);
+  laundry.add(rope);
+  const clothes = ['#FF6B57', '#FFC726', '#FFFFFF', '#2F6BE0', '#7FE3D4', '#F7B8D3'].map((c, i) => {
+    const pivot = new THREE.Group();
+    pivot.position.set(7.6, 2.03, -5.7 + i * .93);
+    const cloth = new THREE.Mesh(new THREE.PlaneGeometry(.74, 1), mat(c, { side: THREE.DoubleSide }));
+    cloth.rotation.y = Math.PI / 2;
+    cloth.position.y = -.5;
+    cloth.castShadow = true;
+    pivot.add(cloth);
+    laundry.add(pivot);
+    return pivot;
+  });
+
+  // Laundry baskets, one per load (up to six shown)
+  const baskets = [];
+  for (let i = 0; i < 6; i++) {
+    const b = new THREE.Group();
+    box(b, .62, .4, .46, 0, .2, 0, '#FFFFFF');
+    box(b, .52, .12, .38, 0, .44, 0, ['#FF6B57', '#2F6BE0', '#FFC726'][i % 3], false);
+    b.position.set(6.4 - (i % 3) * .75, 0, -.2 - Math.floor(i / 3) * .62);
+    laundry.add(b);
+    baskets.push(b);
+  }
+
+  /* Ladder and toolbox: windows and repairs */
+  const tools = new THREE.Group();
+  scene.add(tools);
+  const ladder = new THREE.Group();
+  [-.32, .32].forEach(x => box(ladder, .08, 3.3, .08, x, 1.65, 0, '#C78F5A'));
+  for (let i = 0; i < 7; i++) box(ladder, .64, .06, .06, 0, .35 + i * .45, 0, '#C78F5A');
+  ladder.rotation.x = -.2;
+  tools.add(ladder);
+  const toolbox = new THREE.Group();
+  box(toolbox, .8, .36, .4, 0, .18, 0, '#FF6B57');
+  box(toolbox, .82, .08, .42, 0, .38, 0, '#00267F');
+  box(toolbox, .3, .06, .06, 0, .48, 0, '#22283A');
+  tools.add(toolbox);
+  const hammer = new THREE.Group();
+  box(hammer, .09, .8, .09, 0, 0, 0, '#C78F5A');
+  box(hammer, .42, .16, .16, 0, .4, 0, '#8E99AE');
+  tools.add(hammer);
+
+  // Plumbing: an elbow of pipe with a dripping joint and a wrench
+  const plumbing = new THREE.Group();
+  box(plumbing, .16, 1.2, .16, 0, .6, 0, '#C9D3E3');
+  box(plumbing, .9, .16, .16, .37, 1.18, 0, '#C9D3E3');
+  box(plumbing, .26, .26, .26, 0, 1.18, 0, '#8E99AE');
+  const wrench = new THREE.Group();
+  box(wrench, .1, .7, .06, 0, 0, 0, '#8E99AE');
+  box(wrench, .3, .14, .06, 0, .38, 0, '#8E99AE');
+  wrench.position.set(.75, .5, .25); wrench.rotation.z = .7;
+  plumbing.add(wrench);
+  const dripMat = new THREE.MeshStandardMaterial({ color: col('#7FDDF5'), transparent: true, opacity: .85, emissive: col('#7FDDF5'), emissiveIntensity: .4 });
+  const drips = [0, 1, 2].map(i => {
+    const d = new THREE.Mesh(bubbleGeo, dripMat);
+    d.scale.setScalar(.07);
+    plumbing.add(d);
+    return d;
+  });
+  tools.add(plumbing);
+
+  // Tiling: a stack of fresh tiles
+  const tiles = new THREE.Group();
+  for (let i = 0; i < 7; i++) {
+    const tl = box(tiles, .62, .05, .62, (i % 2) * .05, .03 + i * .055, (i % 3) * .03, i % 2 ? '#FFFFFF' : '#8FE8EC');
+    tl.rotation.y = i * .12;
+  }
+  tools.add(tiles);
+
+  // Appliances waiting for repair
+  const appliances = new THREE.Group();
+  const washMachine = new THREE.Group();
+  box(washMachine, .8, .85, .7, 0, .43, 0, '#FFFFFF');
+  const door = new THREE.Mesh(CYL, mat('#2A4BA8'));
+  door.scale.set(.25, .04, .25); door.rotation.x = Math.PI / 2; door.position.set(0, .45, .36);
+  washMachine.add(door);
+  const fridge = new THREE.Group();
+  box(fridge, .8, 1.7, .7, 0, .85, 0, '#F3F6FB');
+  box(fridge, .82, .03, .72, 0, 1.15, 0, '#C9D3E3', false);
+  box(fridge, .05, .4, .05, .3, 1.42, .37, '#8E99AE', false);
+  box(fridge, .05, .4, .05, .3, .75, .37, '#8E99AE', false);
+  const stove = new THREE.Group();
+  box(stove, .8, .85, .7, 0, .43, 0, '#FFFFFF');
+  box(stove, .78, .04, .68, 0, .87, 0, '#22283A', false);
+  box(stove, .6, .3, .04, 0, .45, .36, '#22283A', false);
+  washMachine.position.x = 0; fridge.position.x = 1; stove.position.x = 2;
+  appliances.add(washMachine, fridge, stove);
+  tools.add(appliances);
+
+  // Home help: a dog out for a walk
+  const dog = new THREE.Group();
+  box(dog, .8, .38, .34, 0, .52, 0, '#C9935A');
+  box(dog, .34, .32, .3, .5, .78, 0, '#C9935A');
+  box(dog, .16, .12, .2, .7, .72, 0, '#A67244');
+  [.1, -.1].forEach(z => box(dog, .08, .16, .06, .45, .98, z, '#7A5230'));
+  const dogLegs = [[.28, .12], [.28, -.12], [-.28, .12], [-.28, -.12]].map(([x, z]) => {
+    const pivot = new THREE.Group();
+    pivot.position.set(x, .4, z);
+    box(pivot, .1, .36, .1, 0, -.18, 0, '#A67244');
+    dog.add(pivot);
+    return pivot;
+  });
+  const dogTail = new THREE.Group();
+  dogTail.position.set(-.42, .65, 0);
+  box(dogTail, .06, .3, .06, 0, .15, 0, '#C9935A');
+  dog.add(dogTail);
+  const lead = box(dog, .03, .03, .9, .4, .9, .4, '#FF6B57', false);
+  lead.rotation.y = .4;
+  tools.add(dog);
+
+  /* Landscaping: tall grass the mower cuts, and a fence that marks the lot */
+  const lawn = new THREE.Group();
+  scene.add(lawn);
+  const tuftGeo = new THREE.ConeGeometry(.13, .75, 4);
+  tuftGeo.translate(0, .375, 0);
+  const tufts = [];
+  for (let i = 0; i < 170; i++) {
+    const a = Math.random() * Math.PI * 2, r = 6 + Math.random() * 4.6;
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (z > 5 && Math.abs(x) < 1.3) continue;
+    const m = new THREE.Mesh(tuftGeo, mat(i % 3 ? '#4CC25A' : '#3AAE4C'));
+    m.position.set(x, 0, z);
+    m.userData.a = a;
+    m.castShadow = true;
+    lawn.add(m);
+    tufts.push(m);
+  }
+  const mower = new THREE.Group();
+  box(mower, .9, .36, .64, 0, .3, 0, '#FF6B57');
+  box(mower, .5, .08, .5, 0, .52, 0, '#FFC726');
+  box(mower, .06, .9, .06, -.6, .7, .22, '#22283A');
+  box(mower, .06, .9, .06, -.6, .7, -.22, '#22283A');
+  box(mower, .06, .06, .5, -.78, 1.12, 0, '#22283A');
+  [[.3, .34], [.3, -.34], [-.3, .34], [-.3, -.34]].forEach(([x, z]) => {
+    const w = new THREE.Mesh(CYL, mat('#22283A'));
+    w.scale.set(.13, .08, .13); w.rotation.x = Math.PI / 2; w.position.set(x, .13, z);
+    mower.add(w);
+  });
+  lawn.add(mower);
+  const fence = new THREE.Group();
+  const posts = [];
+  for (let i = 0; i < 64; i++) {
+    const p = box(fence, .1, .6, .1, 0, .3, 0, '#FFFFFF');
+    p.userData.a = i / 64 * Math.PI * 2;
+    posts.push(p);
+  }
+  const rail = new THREE.Mesh(new THREE.TorusGeometry(1, .025, 4, 96), mat('#FFFFFF'));
+  rail.rotation.x = Math.PI / 2;
+  rail.position.y = .48;
+  fence.add(rail);
+  lawn.add(fence);
+  let fenceR = 0;
+
+  /* Pressure washing: a grimy slab that turns clean under the spray */
+  const wash = new THREE.Group();
+  scene.add(wash);
+  const slabDirty = box(wash, 1, .06, 1, 0, .04, 0, '#7D838F', false);
+  const slabClean = box(wash, 1, .07, 1, 0, .045, 0, '#EEF3F8', false);
+  const washer = new THREE.Group();
+  box(washer, .7, .5, .45, 0, .25, 0, '#FFC726');
+  box(washer, .5, .12, .3, 0, .56, 0, '#00267F');
+  wash.add(washer);
+  const sprayMat = new THREE.MeshStandardMaterial({ color: col('#BDF4FF'), transparent: true, opacity: .8, emissive: col('#7FDDF5'), emissiveIntensity: .5 });
+  const spray = [];
+  for (let i = 0; i < 46; i++) {
+    const d = new THREE.Mesh(bubbleGeo, sprayMat);
+    d.userData = { o: Math.random(), dx: Math.random() - .5, dz: Math.random() - .5 };
+    wash.add(d);
+    spray.push(d);
+  }
+
+  /* Patio: a timber deck with an umbrella table beside the house */
+  const patioG = new THREE.Group();
+  scene.add(patioG);
+  const deck = new THREE.Group();
+  for (let i = 0; i < 9; i++) box(deck, 1 / 9 - .012, .1, 1, -.5 + (i + .5) / 9, .05, 0, i % 2 ? '#D9A066' : '#C98F57', false);
+  patioG.add(deck);
+  const patioSet = new THREE.Group();
+  const table = new THREE.Mesh(CYL, mat('#FFFFFF'));
+  table.scale.set(.5, .06, .5); table.position.y = .72; table.castShadow = true;
+  patioSet.add(table);
+  box(patioSet, .08, .7, .08, 0, .37, 0, '#FFFFFF');
+  box(patioSet, .05, 2.1, .05, 0, 1.05, 0, '#FFFFFF');
+  const umbrella = new THREE.Mesh(new THREE.ConeGeometry(1.2, .55, 8), mat('#FF6B57'));
+  umbrella.position.y = 2.15; umbrella.castShadow = true;
+  patioSet.add(umbrella);
+  [[.85, 0, -Math.PI / 2], [-.85, 0, Math.PI / 2]].forEach(([x, z, r]) => {
+    const ch = new THREE.Group();
+    box(ch, .45, .08, .45, 0, .42, 0, '#2F6BE0');
+    box(ch, .45, .5, .08, 0, .66, -.2, '#2F6BE0');
+    [[-.18, -.18], [.18, -.18], [-.18, .18], [.18, .18]].forEach(([a, b]) => box(ch, .05, .4, .05, a, .2, b, '#FFFFFF'));
+    ch.position.set(x, 0, z); ch.rotation.y = r;
+    patioSet.add(ch);
+  });
+  patioG.add(patioSet);
+
+  const fx = { sparkle: 1, bubble: 0, move: 0, laundry: 0, gleam: 0, tools: 0, lawn: 0, wash: 0, patio: 0 };
+  let prevMove = null;
+  function syncEffects(animate) {
+    const d = animate ? T(.55) : 0, tier = state.tier, svc = state.service, clean = svc === 'cleaning';
+    tween.to(fx, {
+      sparkle: clean ? (tier === 'standard' ? 1 : .55) : (svc === 'windows' || svc === 'patio' || svc === 'packages') ? .6 : 0,
+      bubble: clean && tier === 'deep' ? 1 : 0,
+      move: (clean && tier === 'moveout') || svc === 'truck' ? 1 : 0,
+      laundry: (clean && state.laundry) || svc === 'laundry' || (svc === 'packages' && state.pkg !== 'refresh') ? 1 : 0,
+      gleam: (clean && state.windows) || svc === 'windows' || svc === 'packages' ? 1 : 0,
+      tools: svc === 'windows' || svc === 'repairs' ? 1 : 0,
+      lawn: svc === 'landscaping' ? 1 : 0,
+      wash: svc === 'pressure' || (svc === 'packages' && state.pkg === 'refresh') ? 1 : 0,
+      patio: svc === 'patio' ? 1 : 0,
+      duration: d, ease: 'power2.out'
+    });
+    const moveKey = svc === 'truck' ? 'truck' : clean && tier === 'moveout' ? 'moveout' : null;
+    if (moveKey && moveKey !== prevMove && animate && !REDUCED) {
+      moveBoxes.forEach((b, i) => tween.fromTo(b.position, { y: b.position.y + 8 }, { y: b.position.y, duration: .75, delay: i * .07, ease: 'bounce.out' }));
+      tween.fromTo(truck.position, { x: 22 }, { x: 5.6, duration: .9, ease: 'power3.out' });
+    }
+    prevMove = moveKey;
+  }
+
+  /* Pointer: click the roof to lift it */
+  const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+  function roofHit(e) {
+    if (!roofGroup) return false;
+    const r = canvas.getBoundingClientRect();
+    const view = camera.view;
+    let nx = (e.clientX - r.left) / r.width, ny = (e.clientY - r.top) / r.height;
+    if (view && view.enabled) nx += view.offsetX / view.fullWidth;
+    mouse.set(nx * 2 - 1, -ny * 2 + 1);
+    ray.setFromCamera(mouse, camera);
+    return ray.intersectObject(roofGroup, true).some(h => h.object.userData.roof);
+  }
+  let down = null, idleTimer = 0;
+  canvas.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+  canvas.addEventListener('pointerup', e => {
+    if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 6 && roofHit(e)) setPeek(!peeking);
+    down = null;
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (e.buttons) return;
+    canvas.style.cursor = roofHit(e) ? 'pointer' : 'grab';
+  });
+  controls.addEventListener('start', () => { controls.autoRotate = false; clearTimeout(idleTimer); });
+  controls.addEventListener('end', () => {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => { if (!peeking && !REDUCED) controls.autoRotate = true; }, 4000);
+  });
+
+  /* Paint */
+  document.querySelectorAll('.swatch').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.swatch').forEach(b => b.setAttribute('aria-pressed', b === btn));
+    const c = col(btn.dataset.c);
+    tween.to(paint.color, { r: c.r, g: c.g, b: c.b, duration: T(.45) });
+  }));
+
+  /* Sizing */
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    if (innerWidth > 960) camera.setViewOffset(w, h, 216, 0, w, h);
+    else camera.clearViewOffset();
+    camera.updateProjectionMatrix();
+    frameCamera(false);
+  }
+  new ResizeObserver(resize).observe(stage);
+
+  /* Loop */
+  const clock = new THREE.Clock();
+  const dir = new THREE.Vector3();
+  let introDone = false;
+  function tick() {
+    requestAnimationFrame(tick);
+    if (document.hidden) return;
+    if (!introDone) { introDone = true; intro(); }
+    frame();
+  }
+  // The house starts fully built so a still capture looks finished; the drop-in plays once frames run
+  function intro() {
+    if (REDUCED) return;
+    floorGroups.forEach((f, i) => tween.fromTo(f.position, { y: f.position.y + 12 }, { y: f.position.y, duration: .9, delay: .15 + i * .12, ease: 'bounce.out' }));
+    if (roofGroup) tween.fromTo(roofGroup.position, { y: roofGroup.position.y + 14 }, { y: roofGroup.position.y, duration: 1, delay: .3 + floorGroups.length * .12, ease: 'bounce.out' });
+  }
+  function frame() {
+    const t = REDUCED ? 2 : clock.getElapsedTime(), dt = REDUCED ? 0 : Math.min(clock.getDelta() || .016, .05) + .016;
+
+    if (!REDUCED) {
+      for (let i = 0; i < seaPos.count; i++) {
+        const x = seaPos.getX(i), z = seaPos.getZ(i);
+        seaPos.setY(i, Math.sin(x * .13 + t * .9) * .16 + Math.cos(z * .17 + t * .7) * .16);
+      }
+      seaPos.needsUpdate = true;
+      fronds.forEach(f => {
+        f.crown.rotation.z = Math.sin(t * .9 + f.phase) * .035;
+        f.crown.rotation.x = Math.cos(t * .7 + f.phase) * .03;
+      });
+      clouds.forEach((c, i) => {
+        c.userData.a += .00022;
+        c.position.x = Math.cos(c.userData.a) * 130;
+        c.position.z = Math.sin(c.userData.a) * 130;
+      });
+      boat.position.y = -.4 + Math.sin(t * .8) * .12;
+      boat.rotation.z = Math.sin(t * .6) * .035;
+      foam.scale.setScalar(1 + Math.sin(t * .6) * .012);
+    }
+
+    const { W, D, H } = dims;
+    const peekH = peeking ? (state.floors - 1) * PEEK_GAP : 0;
+    sparkles.forEach(s => {
+      const u = s.userData;
+      s.position.set(u.nx * W, u.ny * (H + peekH) + .3, u.nz * D);
+      const tw = Math.max(0, Math.sin(t * u.sp + u.p));
+      s.scale.setScalar(.95 * tw * tw * fx.sparkle + .001);
+    });
+
+    bubbleGroup.visible = fx.bubble > .01;
+    if (bubbleGroup.visible) {
+      bubbles.forEach(b => {
+        const u = b.userData;
+        u.y += u.v * dt * 1.5;
+        if (u.y > H + 5) u.y = 0;
+        const R = Math.max(W, D) * u.r + .8;
+        b.position.set(Math.cos(u.a + u.y * .25) * R, u.y + Math.sin(u.y * 2) * .1, Math.sin(u.a + u.y * .25) * R);
+        b.scale.setScalar(u.s * fx.bubble * (1 + u.y * .05));
+      });
+      foamPile.children.forEach(b => {
+        const a = b.userData.a, cx = Math.cos(a), sz = Math.sin(a);
+        const k = Math.min((W / 2 + .1) / Math.max(Math.abs(cx), .001), (D / 2 + .1) / Math.max(Math.abs(sz), .001));
+        b.position.set(cx * k, .22 * fx.bubble, sz * k);
+        b.visible = fx.bubble > .2;
+      });
+    }
+
+    moveOut.visible = fx.move > .01;
+    moveOut.scale.setScalar(Math.max(.01, fx.move));
+    moveOut.position.set(0, 0, 0);
+
+    const svc = state.service;
+    const boxCount = svc === 'truck' ? { small: 2, medium: 4, full: 6 }[state.load] : 6;
+    moveBoxes.forEach((b, i) => { b.visible = i < boxCount; });
+    truck.position.y = -.02 + (svc === 'truck' && !REDUCED ? Math.abs(Math.sin(t * 6)) * .03 : 0);
+
+    laundry.visible = fx.laundry > .01;
+    laundry.scale.set(1, Math.max(.01, fx.laundry), 1);
+    clothes.forEach((c, i) => { c.rotation.z = Math.sin(t * 2 + i * 1.3) * .2 + .1; });
+    const basketCount = svc === 'laundry' ? Math.min(6, state.loads) : 0;
+    baskets.forEach((b, i) => { b.visible = i < basketCount; });
+
+    glass.emissiveIntensity = fx.gleam * (.55 + Math.sin(t * 3) * .3);
+
+    // Ladder against the front corner; toolbox and a tapping hammer for repairs
+    tools.visible = fx.tools > .01;
+    if (tools.visible) {
+      tools.scale.setScalar(Math.max(.01, fx.tools));
+      const job = svc === 'repairs' ? state.job : null;
+      ladder.visible = svc === 'windows' || job === 'handyman';
+      ladder.position.set(W * .28, .1, D / 2 + .75);
+      toolbox.visible = !!job && job !== 'homehelp';
+      toolbox.position.set(W / 2 + .9, .1, D / 2 + 1.3);
+      hammer.visible = job === 'handyman';
+      hammer.position.set(W / 2 + .9, 1.25 + Math.sin(t * 3) * .12, D / 2 + 1.3);
+      hammer.rotation.z = Math.sin(t * 6) * .5;
+
+      plumbing.visible = job === 'plumbing';
+      plumbing.position.set(W / 2 + 2.1, .05, D / 2 + .6);
+      drips.forEach((d, i) => {
+        const k = ((REDUCED ? .4 : t * .9) + i / 3) % 1;
+        d.position.set(0, 1.0 - k * .95, .2);
+        d.visible = k < .95;
+      });
+
+      tiles.visible = job === 'tiling';
+      tiles.position.set(W / 2 + 2.2, .02, D / 2 + .9);
+      tiles.scale.setScalar(.8 + Math.min(1, state.tileArea / 250) * .7);
+
+      appliances.visible = job === 'appliances';
+      appliances.position.set(W / 2 + 1.8, .05, D / 2 + .3);
+      const ap = state.appliances;
+      washMachine.visible = ap.includes('Washing machine') || ap.includes('Dryer');
+      fridge.visible = ap.includes('Fridge') || ap.includes('Freezer');
+      stove.visible = ap.includes('Stove or oven');
+
+      dog.visible = job === 'homehelp';
+      if (dog.visible) {
+        const da = REDUCED ? 1 : t * .35, dr = Math.max(W, D) / 2 + 2.6;
+        dog.position.set(Math.cos(da) * dr, 0, Math.sin(da) * dr);
+        dog.rotation.y = -da - Math.PI / 2 + Math.PI;
+        dogLegs.forEach((l, i) => { l.rotation.z = Math.sin(t * 9 + (i % 2) * Math.PI + (i > 1 ? Math.PI : 0)) * .45; });
+        dogTail.rotation.x = Math.sin(t * 14) * .6;
+      }
+    }
+
+    // Mower sweeps the lawn; grass is short right behind it and taller further round
+    lawn.visible = fx.lawn > .01;
+    if (lawn.visible) {
+      const R = Math.min(11.6, 6.4 + Math.sqrt(state.lot / 43560) * 5.6);
+      if (Math.abs(R - fenceR) > .01) {
+        fenceR = R;
+        posts.forEach(p => p.position.set(Math.cos(p.userData.a) * R, .3, Math.sin(p.userData.a) * R));
+        rail.scale.set(R, R, 1);
+      }
+      const th = (REDUCED ? 1 : t * .45) % (Math.PI * 2), rm = Math.min(R - .9, 8.6);
+      mower.position.set(Math.cos(th) * rm, 0, Math.sin(th) * rm);
+      mower.rotation.y = -th - Math.PI / 2;
+      tufts.forEach(m => {
+        const since = ((th - m.userData.a) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) / (Math.PI * 2);
+        const inLot = Math.hypot(m.position.x, m.position.z) < R;
+        m.visible = inLot;
+        m.scale.y = Math.max(.01, (.18 + .82 * since) * fx.lawn);
+      });
+    }
+
+    // Spray sweeps across the slab, leaving clean concrete behind
+    wash.visible = fx.wash > .01;
+    if (wash.visible) {
+      const s = Math.min(5.6, Math.max(2.4, Math.sqrt(state.area) / 8));
+      const w = s * 1.25, d = s * .75, x0 = 1.6, z0 = Math.min(10.4 - d / 2, D / 2 + 2.2 + d / 2);
+      wash.scale.setScalar(Math.max(.01, fx.wash));
+      slabDirty.scale.set(w, .06, d); slabDirty.position.set(x0, .04, z0);
+      const prog = REDUCED ? .6 : Math.min(1, (t * .16) % 1.25);
+      slabClean.scale.set(Math.max(.01, w * prog), .07, d); slabClean.position.set(x0 - w / 2 + w * prog / 2, .045, z0);
+      const nx = x0 - w / 2 + w * prog, nz = z0 + Math.sin(t * 2.2) * d * .35;
+      washer.position.set(x0 - w / 2 - .8, 0, z0 - d / 2 + .3);
+      spray.forEach(p => {
+        const u = p.userData, k = ((REDUCED ? 0 : t * 2.4) + u.o) % 1;
+        p.position.set(nx + u.dx * .3 * k, 1.3 - 1.25 * k, nz + u.dz * .6 * k);
+        p.scale.setScalar(.06 + .05 * k);
+      });
+    }
+
+    // Deck sized to the patio, set beside the house
+    patioG.visible = fx.patio > .01;
+    if (patioG.visible) {
+      const s = Math.min(5.4, Math.max(2.2, Math.sqrt(state.patio) / 4.2));
+      const w = s * .85, d = s * 1.15;
+      deck.scale.set(w, 1, d);
+      patioG.position.set(W / 2 + .4 + w / 2, 0, -.2);
+      patioG.scale.setScalar(Math.max(.01, fx.patio));
+      patioSet.position.set(0, .1, 0);
+    }
+
+    // Keep the chosen orbit angle while framing distance and height follow the house
+    controls.target.y += (view.y - controls.target.y) * .1;
+    controls.update();
+    dir.copy(camera.position).sub(controls.target).setLength(view.dist);
+    camera.position.copy(controls.target).add(dir);
+    renderer.render(scene, camera);
+  }
+
+  window.scene3D = {
+    sync(animate) { rebuild(animate); syncEffects(animate); },
+    // Draws one frame on demand, used for checks while the page is in a background tab
+    renderFrame() { if (window.gsap) gsap.ticker.tick(); frame(); },
+    setPeek
+  };
+
+  resize();
+  rebuild(false);
+  syncEffects(false);
+  frame();
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
