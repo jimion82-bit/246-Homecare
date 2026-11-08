@@ -532,6 +532,8 @@ html.dusk .stage { background: linear-gradient(#1B2A6B, #E0785A 60%, #FFC27A); }
 .acc-body h3 { font: 700 14.5px/1.3 var(--body); color: #fff; }
 .acc-body p + h3 { margin-top: 2px; }
 .parishes { display: flex; flex-wrap: wrap; gap: 8px; }
+.pay-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.pay-badges span { padding: 7px 12px; border-radius: 10px; background: #fff; color: var(--ultra); font-size: 13px; font-weight: 800; }
 .parishes span { padding: 7px 12px; border-radius: 999px; background: var(--ultra); font-size: 13px; font-weight: 600; color: #fff; }
 .contact-links { display: flex; flex-direction: column; gap: 8px; }
 .contact-links a, .contact-links button {
@@ -1013,7 +1015,7 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
           <h3>Are your workers vetted?</h3>
           <p>Yes. Every team member is checked, including a Police Certificate of Character and a trial job, before they work in your home.</p>
           <h3>How do I pay?</h3>
-          <p>Online bank transfer, a secure card link, or cash. You choose when you book.</p>
+          <p>CIBC 1stPay, online banking transfer, PayPal, or cash. You choose when you book, and we send the payment details with your confirmation.</p><div class="pay-badges" aria-label="Ways to pay"><span>CIBC 1stPay</span><span>Online banking</span><span>PayPal</span><span>Cash</span></div>
           <h3>Can I save with regular visits?</h3>
           <p>Book biweekly or more and you save 10% on cleaning, windows, landscaping, pressure washing, patio and laundry.</p>
           <h3>What if my job isn't listed?</h3>
@@ -1085,8 +1087,9 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
     </div>
     <fieldset class="pay">
       <legend>How would you like to pay?</legend>
-      <label><input type="radio" name="pay" value="Online bank transfer" checked><span>Online bank transfer</span></label>
-      <label><input type="radio" name="pay" value="Card (WiPay / PowerTranz)"><span>Card link</span></label>
+      <label><input type="radio" name="pay" value="CIBC 1stPay" checked><span>CIBC 1stPay</span></label>
+      <label><input type="radio" name="pay" value="Online banking"><span>Online banking</span></label>
+      <label><input type="radio" name="pay" value="PayPal"><span>PayPal</span></label>
       <label><input type="radio" name="pay" value="Cash"><span>Cash</span></label>
     </fieldset>
     <button class="submit" type="submit">Continue to WhatsApp</button>
