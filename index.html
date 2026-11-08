@@ -967,6 +967,7 @@ const PRICING = {
   cleaning: {
     anchorSqft: 1500,      // homes larger than this pay more; smaller homes pay the bedroom price
     extraBathroom: 25,     // per bathroom above 2
+    minFloorAdd: 50,       // each floor above the first adds at least $50 (or 10%, whichever is more)
     singleBathroomCredit: 10,
     tiers: {                // starting price for a 1-bedroom home, plus bedStep for each extra bedroom
       standard: { name: 'Standard Clean', low: 185, high: 245, bedStep: 20,
@@ -1061,14 +1062,19 @@ function estimate(s) {
       const f = Math.max(1, sizeFactor(s.sqft, c.anchorSqft));
       const bedLow = tier.low + tier.bedStep * (s.beds - 1), bedHigh = tier.high + tier.bedStep * (s.beds - 1);
       const bathAdj = s.baths > 2 ? (s.baths - 2) * c.extraBathroom : s.baths < 2 ? -c.singleBathroomCredit : 0;
-      const floorF = 1 + p.extraFloorRate * (s.floors - 1);
-      low = (bedLow * f + bathAdj) * floorF;
-      high = (bedHigh * f + bathAdj) * floorF;
+      // Each floor above the first adds 10%, but never less than $50 per floor
+      const extraFloors = s.floors - 1;
+      // Floors are added on top of the 1-bedroom minimum, so each floor always raises the price by $50+
+      const baseLow = Math.max(tier.low, bedLow * f + bathAdj), baseHigh = Math.max(tier.high, bedHigh * f + bathAdj);
+      const floorAddLow = extraFloors * Math.max(c.minFloorAdd, baseLow * p.extraFloorRate);
+      const floorAddHigh = extraFloors * Math.max(c.minFloorAdd, baseHigh * p.extraFloorRate);
+      low = baseLow + floorAddLow;
+      high = baseHigh + floorAddHigh;
       rows.push([tier.name + ', 1 bedroom', span(tier.low, tier.high)]);
       if (s.beds > 1) rows.push([(s.beds - 1) + ' more bedroom' + (s.beds > 2 ? 's' : '') + ' × $' + tier.bedStep, '+' + money(tier.bedStep * (s.beds - 1))]);
       if (f > 1) rows.push(['Home size (' + n0(s.sqft) + ' sq ft)', '× ' + f.toFixed(2)]);
       if (bathAdj) rows.push(['Bathrooms', (bathAdj > 0 ? '+' : '−') + money(Math.abs(bathAdj))]);
-      if (s.floors > 1) rows.push(['Floors', '× ' + floorF.toFixed(2)]);
+      if (extraFloors > 0) rows.push([extraFloors + ' extra floor' + (extraFloors > 1 ? 's' : '') + ' (min $' + c.minFloorAdd + ' each)', '+' + (roundTo5(floorAddLow) === roundTo5(floorAddHigh) ? money(roundTo5(floorAddLow)) : span(floorAddLow, floorAddHigh))]);
       details.push('Home: ' + homeLine(s));
       const extras = [];
       if (s.windows) {
