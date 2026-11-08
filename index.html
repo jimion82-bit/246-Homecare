@@ -348,12 +348,19 @@ input[type="range"]::-moz-range-thumb {
 .jobs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 [data-job][hidden], [data-pkg][hidden] { display: none !important; }
 .tiers.two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.other-job { display: flex; flex-direction: column; gap: 8px; }
+.other-job textarea { width: 100%; padding: 12px; border: 2px solid transparent; border-radius: 12px; background: var(--ultra-soft); color: #fff; font: inherit; resize: vertical; }
+.other-job textarea::placeholder { color: var(--mist); }
+.other-job textarea:focus { outline: none; border-color: var(--gold); }
+#otherLink { align-self: flex-start; font-size: 14px; }
 .join-link { padding: 0; border: 0; background: none; color: var(--gold); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 dialog .chip span { background: #fff; border: 2px solid #C7D3EC; color: var(--ink); }
 dialog .chip input:checked + span { background: var(--ultra); border-color: var(--ultra); color: #fff; }
 dialog .chips { margin-top: 4px; }
 .check { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; cursor: pointer; }
 .check input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--ultra); flex: none; }
+.field .check { flex-direction: row; font-weight: 500; }
+.field .check input { width: 20px; min-height: 0; height: 20px; padding: 0; border: 0; }
 .single-stepper { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .single-stepper .stepper-box { width: 150px; }
 .acre { font-size: 13px; color: var(--mist); }
@@ -644,6 +651,7 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
         <label class="svc"><input type="radio" name="service" value="packages"><span class="svc-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 8l9-5 9 5-9 5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></i><b>Packages</b></span></label>
       </div>
       <p class="svc-note" id="svcNote"></p>
+      <button type="button" class="join-link" id="otherLink">Don't see your job? Request it here</button>
     </fieldset>
 
     <div class="group" data-for="cleaning">
@@ -702,6 +710,7 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
         <label class="tier"><input type="radio" name="job" value="appliances"><span class="tier-card"><b>Appliances</b><small>Quote after call</small></span></label>
         <label class="tier"><input type="radio" name="job" value="homehelp"><span class="tier-card"><b>Home help</b><small>$35&ndash;50/hr</small></span></label>
         <label class="tier"><input type="radio" name="job" value="handyman"><span class="tier-card"><b>Handyman</b><small>Quote after call</small></span></label>
+        <label class="tier"><input type="radio" name="job" value="other"><span class="tier-card"><b>Something else</b><small>Quote after call</small></span></label>
       </div>
       <p class="tier-note" id="jobNote"></p>
     </fieldset>
@@ -730,7 +739,11 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
         <label class="chip"><input type="checkbox" name="task" value="Furniture assembly"><span>Furniture assembly</span></label>
       </div>
       <p class="svc-note" data-job="homehelp">Not sure how long? Leave it at 2 hours and tell us what you need when you book.</p>
-      <p class="svc-note" data-job="plumbing tiling appliances handyman">Book a free discovery call. We talk through the job, look at your photos and give you a price before any work starts.</p>
+      <div class="other-job" data-job="other">
+        <label class="label" for="otherJob">What do you need done?</label>
+        <textarea id="otherJob" rows="3" placeholder="e.g. Paint two bedrooms, fix a fence, mount a TV"></textarea>
+      </div>
+      <p class="svc-note" data-job="plumbing tiling appliances handyman other">Book a free discovery call. We talk through the job, look at your photos and give you a price before any work starts.</p>
     </div>
 
     <div class="group" data-for="laundry">
@@ -975,7 +988,8 @@ const PRICING = {
     tiling: { name: 'Tiling' },
     appliances: { name: 'Appliance repair' },
     homehelp: { name: 'Home help', hourLow: 35, hourHigh: 50 },
-    handyman: { name: 'General handyman' }
+    handyman: { name: 'General handyman' },
+    other: { name: 'Other job' }
   },
   laundry: { firstTwoLoads: 75, extraLoad: 35 },     // flat: $75 covers 2 loads, then $35 per extra load
   truck: {
@@ -1006,7 +1020,8 @@ const JOB_NOTES = {
   tiling: 'Floor and wall tiles, repairs or new areas. Tell us roughly how big the area is.',
   appliances: 'Washing machines, fridges, dryers, stoves and freezers. Pick the ones that need fixing.',
   homehelp: 'Curtains and blinds, moving furniture, dog walking and errands. Priced by the hour.',
-  handyman: 'Fixtures, fittings and small fixes around the house.'
+  handyman: 'Fixtures, fittings and small fixes around the house.',
+  other: 'Painting, carpentry, fencing, roofing, mounting a TV and anything else around the home. Describe it and we\'ll call you.'
 };
 
 const SERVICES = {
@@ -1109,6 +1124,7 @@ case 'windows': {
       // Plumbing, tiling, appliances and handyman jobs are priced after a discovery call
       if (s.job === 'tiling') details.push('Area to tile: about ' + n0(s.tileArea) + ' sq ft');
       if (s.job === 'appliances') details.push('Appliances: ' + (s.appliances.join(', ') || 'Not sure yet'));
+      if (s.job === 'other') details.push('Job details: ' + ((s.otherJob || '').trim() || 'To discuss on the call'));
       return { quote: true, low: 0, high: 0, rows: [['Price', 'Given after a discovery call'], ['Parts and materials', 'At cost']], details, recurringApplies: false };
     }
     case 'laundry': {
@@ -1166,7 +1182,7 @@ const state = {
   sqft: 1500, floors: 1, beds: 3, baths: 2, tier: 'standard', windows: false, windowCount: 6, laundry: false, recurring: false,
   lot: 5000, area: 1000, surfaces: ['Driveway'], patio: 300, hours: 2, loads: 2, load: 'small', km: 10, helpers: 0,
   pkg: 'villa', refreshClean: 'standard', lotBand: 'small',
-  job: 'plumbing', tileArea: 50, appliances: ['Washing machine'], tasks: ['Curtains and blinds']
+  job: 'plumbing', otherJob: '', tileArea: 50, appliances: ['Washing machine'], tasks: ['Curtains and blinds']
 };
 const LIMITS = { floors: [1, 3], beds: [1, 8], baths: [1, 7], windowCount: [1, 40], hours: [1, 8], loads: [2, 12] };
 const RANGES = { sqft: [500, 6000, 50], lot: [1000, 43560, 250], area: [200, 5000, 50], patio: [100, 1500, 25], tileArea: [10, 500, 5] };
@@ -1303,6 +1319,15 @@ document.querySelectorAll('input[name="load"]').forEach(r => r.addEventListener(
 document.querySelectorAll('input[name="pkg"]').forEach(r => r.addEventListener('change', () => { state.pkg = r.value; update(true); }));
 document.querySelectorAll('input[name="lotBand"]').forEach(r => r.addEventListener('change', () => { state.lotBand = r.value; update(true); }));
 document.querySelectorAll('input[name="refreshClean"]').forEach(r => r.addEventListener('change', () => { state.refreshClean = r.value; update(true); }));
+$('otherJob').addEventListener('input', e => { state.otherJob = e.target.value; });
+$('otherLink').addEventListener('click', () => {
+  document.querySelector('input[name="service"][value="repairs"]').checked = true;
+  document.querySelector('input[name="job"][value="other"]').checked = true;
+  state.service = 'repairs';
+  state.job = 'other';
+  update(true);
+  setTimeout(() => { $('otherJob').scrollIntoView({ behavior: 'smooth', block: 'center' }); $('otherJob').focus({ preventScroll: true }); }, 50);
+});
 document.querySelectorAll('input[name="job"]').forEach(r => r.addEventListener('change', () => { state.job = r.value; update(true); }));
 [['surf', 'surfaces', false], ['appl', 'appliances', true], ['task', 'tasks', true]].forEach(([name, key, rebuild]) => {
   document.querySelectorAll('input[name="' + name + '"]').forEach(c => c.addEventListener('change', () => {
