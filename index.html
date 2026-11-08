@@ -539,8 +539,10 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
 
 /* ------- Phone and narrow screens ------- */
 @media (max-width: 960px) {
-  html, body { height: auto; }
-  .stage { position: sticky; top: 0; inset-inline: 0; height: 42svh; min-height: 290px; z-index: 1; }
+  /* Phones: the 3D scene stays locked at the top and only the panel below it scrolls */
+  :root { --stage-h: max(230px, 40svh); }
+  html, body { height: 100%; overflow: hidden; }
+  .stage { position: fixed; top: 0; left: 0; right: 0; bottom: auto; height: var(--stage-h); z-index: 1; }
   .quote { gap: 8px; padding-block: 10px max(12px, env(safe-area-inset-bottom, 0px)); }
   .quote .fine { display: none; }
   .price { font-size: 1.85rem; }
@@ -557,7 +559,7 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
   .paint > span { display: none; }
   .swatch { width: 24px; height: 24px; }
   .legend { order: -1; width: 100%; font-size: 12px; padding: 6px 10px; }
-  .panel { position: relative; z-index: 2; width: auto; top: auto; left: 0; }
+  .panel { position: fixed; z-index: 2; width: auto; top: var(--stage-h); left: 0; right: 0; bottom: 0; }
   .panel::before {
     top: -13px;
     left: 0;
@@ -568,7 +570,8 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
     background: radial-gradient(circle at 50% 100%, var(--ultra) 12px, transparent 13px) 0 0 / 24px 14px repeat-x;
   }
   .controls {
-    overflow: visible;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding-left: max(16px, env(safe-area-inset-left, 0px));
     padding-right: max(16px, env(safe-area-inset-right, 0px));
     padding-block: 18px;
@@ -994,10 +997,10 @@ const PRICING = {
   },
   laundry: { firstTwoLoads: 75, extraLoad: 35 },     // flat: $75 covers 2 loads, then $35 per extra load
   truck: {
-    loads: {                                          // per trip, driver included; $150 is the most any trip costs
-      small: { low: 80, high: 100 },
-      medium: { low: 100, high: 125 },
-      full: { low: 125, high: 150 }
+    loads: {                                          // per trip, driver included; small starts at $110, full truck tops out at $220
+      small: { low: 110, high: 140 },
+      medium: { low: 140, high: 180 },
+      full: { low: 180, high: 220 }
     }
   }
 };
@@ -1034,7 +1037,7 @@ const SERVICES = {
   repairs: { name: 'Repairs & Home Help', note: 'Choose the type of job below.', book: 'Book This Job', unit: 'BBD plus parts', photos: 'of what needs doing' },
   laundry: { name: 'Laundry Pickup & Drop-off', note: 'We collect, wash, dry, fold and bring it back. Two-load minimum.', book: 'Book Laundry Pickup', unit: 'BBD per pickup', photos: null },
   packages: { name: 'Packages', note: 'Bundle your services and save. Priced by number of bedrooms.', book: 'Book This Package', unit: 'BBD', photos: 'of the main rooms and outdoor areas' },
-  truck: { name: 'Truck & Freighting', note: 'Furniture, appliances and goods moved across the island. Driver included, $150 max per trip.', book: 'Book This Trip', unit: 'BBD per trip', photos: 'of the items and both locations' }
+  truck: { name: 'Truck & Freighting', note: 'Furniture, appliances and goods moved across the island. Driver included, from $110 per trip.', book: 'Book This Trip', unit: 'BBD per trip', photos: 'of the items and both locations' }
 };
 const LOAD_NAMES = { small: 'Small load (a few items)', medium: 'Medium load (about a room)', full: 'Full truck' };
 const RECURRING = new Set(['cleaning', 'windows', 'landscaping', 'pressure', 'patio', 'laundry']);
