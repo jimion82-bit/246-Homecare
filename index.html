@@ -624,6 +624,9 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
 }
 .submit { background: var(--ultra); color: #fff; }
 .wa { background: var(--wa); color: #fff; }
+.ref-box { margin: 0; padding: 12px 14px; border-radius: 12px; background: #fff; border: 2px dashed var(--ultra); font-size: 14px; }
+.ref-box b { display: block; font: 800 24px/1.2 var(--display); color: var(--ultra); letter-spacing: .03em; }
+.ref-box span { color: #40507C; font-size: 13px; }
 .cal { display: block; width: 100%; padding: 14px 18px; border-radius: 14px; background: var(--gold); color: var(--ink); text-align: center; text-decoration: none; font: 800 17px/1.15 var(--display); }
 .ghost {
   width: 100%;
@@ -1109,9 +1112,7 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
         </select><span class="err">Please choose a parish.</span></div>
       <div class="field"><label for="f-address" id="addrLabel">Address</label><input id="f-address" name="address" autocomplete="street-address" required><span class="err">Please add the address.</span></div>
       <div class="field wide" id="dropoffField" hidden><label for="f-dropoff">Drop-off address</label><input id="f-dropoff" name="dropoff"><span class="err">Please add where we are taking it.</span></div>
-      <div class="field"><label for="f-date">Preferred date</label><input id="f-date" name="date" type="date" required><span class="err">Please choose a date from tomorrow onwards.</span></div>
-      <div class="field"><label for="f-time">Preferred time</label>
-        <select id="f-time" name="time"><option>Morning</option><option>Afternoon</option><option>Any time</option></select></div>
+
       <div class="field wide"><label for="f-notes">Anything we should know? (optional)</label><textarea id="f-notes" name="notes" rows="2" placeholder="Pets, gate codes, rooms that need extra attention"></textarea></div>
     </div>
     <fieldset class="pay">
@@ -1126,13 +1127,15 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
   </form>
 
   <div class="dlg-body" id="doneView" hidden>
+    <p class="ref-box">Your job reference <b id="refShow"></b><span>Type this in when you pick your time.</span></p>
     <ol class="steps">
       <li><strong>Press send in WhatsApp.</strong> Your details are already filled in.</li>
+      <li id="stepCal" hidden><strong id="calStepTitle">Pick your time</strong> in our calendar and enter your job reference.</li>
       <li id="stepPhotos"><strong>Share 5 to 8 photos</strong> of the kitchen, bathrooms and living areas in the same chat.</li>
-      <li>We confirm your final price and date.</li>
+      <li id="stepConfirm">We confirm your price and appointment.</li>
     </ol>
-    <a class="wa" id="waLink" href="#" target="_blank" rel="noopener">Open WhatsApp</a>
-    <a class="cal" id="calLink" href="#" target="_blank" rel="noopener" hidden>📅 Pick your time in our calendar</a>
+    <a class="wa" id="waLink" href="#" target="_blank" rel="noopener">1. Open WhatsApp</a>
+    <a class="cal" id="calLink" href="#" target="_blank" rel="noopener" hidden>📅 2. Pick your time</a>
     <div class="summary" id="waText"></div>
     <button class="ghost" id="copyBtn" type="button">Copy these details</button>
     <p class="fine" style="color:#40507C">No WhatsApp? Message or call 246-263-7048 with the details above.</p>
@@ -1645,6 +1648,7 @@ document.querySelectorAll('input[name="job"]').forEach(r => r.addEventListener('
    ========================================================================== */
 const dlg = $('dlg'), form = $('bookForm');
 const WHATSAPP_NUMBER = '12462637048';
+const JOBLOG_URL = ''; // Google Apps Script web app URL for the job log sheet. Empty = off.
 const BOOKING_URL = 'https://calendar.app.google/vW3JYb3f8cHmpu4CA'; // paste the Google Calendar booking page link here, e.g. https://calendar.app.google/xxxx
 
 function tomorrow() {
@@ -1662,7 +1666,6 @@ $('book').addEventListener('click', () => {
     : serviceLabel(state) + '. Estimate ' + (e.low === e.high ? money(e.low) : money(e.low) + ' – ' + money(e.high)) + ' ' + (e.unit || 'BBD');
   $('dropoffField').hidden = !truck;
   $('addrLabel').textContent = truck ? 'Pickup address' : 'Address';
-  $('f-date').min = tomorrow();
   form.hidden = false;
   $('doneView').hidden = true;
   dlg.showModal();
@@ -1676,12 +1679,14 @@ const checks = {
   'f-phone': v => v.replace(/\D/g, '').length >= 7,
   'f-parish': v => !!v,
   'f-address': v => v.trim().length > 3,
-  'f-dropoff': v => state.service !== 'truck' || v.trim().length > 3,
-  'f-date': v => !!v && v >= tomorrow()
+  'f-dropoff': v => state.service !== 'truck' || v.trim().length > 3
 };
 Object.keys(checks).forEach(id => $(id).addEventListener('input', () => {
   if (checks[id]($(id).value)) $(id).closest('.field').classList.remove('bad');
 }));
+
+// Quote-after-visit jobs and large jobs book a visit or call first, not the job itself
+function visitFirst(st, e) { return !!e.quote || e.high > PRICING.walkthroughOver; }
 
 // A short reference so a booking can be matched to its job card, e.g. 246-1108-K7
 let jobRef = '';
@@ -1709,10 +1714,24 @@ function bookingMessage(d) {
     'Parish: ' + d.parish,
     (truck ? 'Pickup address: ' : 'Address: ') + d.address.trim());
   if (truck) lines.push('Drop-off address: ' + d.dropoff.trim());
-  lines.push('Preferred: ' + d.date + ', ' + d.time, 'Payment: ' + d.pay);
+  lines.push('Payment: ' + d.pay);
   if (d.notes.trim()) lines.push('Notes: ' + d.notes.trim());
-  lines.push('', meta.photos ? "I'll share 5-8 photos " + meta.photos + ' next.' : "I'll have the laundry bagged and ready for pickup.");
+  lines.push('', (meta.photos ? "I'll share 5-8 photos " + meta.photos + ' next' : "I'll have the laundry bagged and ready for pickup") +
+    (BOOKING_URL ? ', and pick ' + (visitFirst(s, e) ? 'a site visit time' : 'my time') + ' in your calendar.' : '.'));
   return lines.join('\n');
+}
+
+function logJob(text) {
+  if (!JOBLOG_URL) return;
+  const d = Object.fromEntries(new FormData(form)), e = estimate(state);
+  const row = {
+    ref: jobRef, service: serviceLabel(state),
+    job: (state.service === 'trades' || state.service === 'repairs') ? PRICING.repairs[state.job].name : '',
+    estimate: e.quote ? (e.quoteText || 'Quote after call') : 'BBD ' + (e.low === e.high ? money(e.low) : money(e.low) + ' - ' + money(e.high)),
+    name: d.name, phone: d.phone, parish: d.parish, address: d.address, dropoff: d.dropoff || '', payment: d.pay, notes: d.notes,
+    details: e.details.join(' | '), message: text
+  };
+  try { fetch(JOBLOG_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(row), keepalive: true }); } catch (err) { /* logging never blocks a booking */ }
 }
 
 form.addEventListener('submit', e => {
@@ -1734,7 +1753,15 @@ form.addEventListener('submit', e => {
   $('stepPhotos').innerHTML = meta.photos
     ? '<strong>Share 5 to 8 photos</strong> ' + meta.photos + ' in the same chat' + (big ? ', and we will arrange a quick walkthrough.' : '.')
     : '<strong>Have your laundry bagged</strong> and ready for pickup.';
-  if (BOOKING_URL) { $('calLink').href = BOOKING_URL; $('calLink').hidden = false; }
+  $('refShow').textContent = jobRef;
+  const visit = visitFirst(state, estimate(state));
+  if (BOOKING_URL) {
+    $('calLink').href = BOOKING_URL; $('calLink').hidden = false; $('stepCal').hidden = false;
+    $('calLink').textContent = '📅 2. Pick your ' + (visit ? 'site visit time' : 'time');
+    $('calStepTitle').textContent = visit ? 'Pick a time for your free ' + (state.service === 'trades' ? 'site visit' : state.service === 'packages' || estimate(state).high > PRICING.walkthroughOver ? 'walkthrough' : 'discovery call') : 'Pick your time';
+  }
+  $('stepConfirm').textContent = visit ? 'We send your written quote. Work is scheduled once the 75% deposit is in.' : 'We confirm your price and appointment.';
+  logJob(text);
   form.hidden = true;
   $('doneView').hidden = false;
   $('dlgTitle').textContent = 'One last step';

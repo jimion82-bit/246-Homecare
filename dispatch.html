@@ -149,7 +149,7 @@ function build() {
   const lines = ['NEW JOB: ' + ref];
   PUBLIC_KEYS.forEach(k => { if (f[k]) lines.push(k + ': ' + f[k]); });
   if (f['Parish']) lines.push('Area: ' + f['Parish']);
-  if (f['Preferred']) lines.push('When: ' + f['Preferred']);
+  lines.push('When: ' + (f['Preferred'] || 'see calendar booking for ' + ref));
   lines.push(payLine(f['Estimate']));
   if ($('withNotes').checked && f['Notes']) lines.push('Notes: ' + f['Notes']);
   lines.push('', 'Want it? Reply "I’ll take ' + ref + '". James confirms who gets it.');
@@ -179,7 +179,7 @@ function buildConfirm(f) {
   const lines = ['Hi ' + who + ', ' + ref + ' is yours. Here are the details:', ''];
   if (f['Service']) lines.push('Service: ' + f['Service']);
   PUBLIC_KEYS.slice(1).forEach(k => { if (f[k]) lines.push(k + ': ' + f[k]); });
-  if (f['Preferred']) lines.push('When: ' + f['Preferred']);
+  lines.push('When: ' + (f['Preferred'] || 'see calendar booking for ' + ref));
   lines.push('');
   if (f['Name']) lines.push('Customer: ' + f['Name']);
   if (f['Phone']) lines.push('Phone: ' + f['Phone']);
