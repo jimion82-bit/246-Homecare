@@ -624,9 +624,17 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
 }
 .submit { background: var(--ultra); color: #fff; }
 .wa { background: var(--wa); color: #fff; }
-.ref-box { margin: 0; padding: 12px 14px; border-radius: 12px; background: #fff; border: 2px dashed var(--ultra); font-size: 14px; }
-.ref-box b { display: block; font: 800 24px/1.2 var(--display); color: var(--ultra); letter-spacing: .03em; }
-.ref-box span { color: #40507C; font-size: 13px; }
+.done-lead { margin: 0; font-size: 15.5px; line-height: 1.45; }
+.photos-tip { margin: 0; font-size: 13.5px; color: #40507C; }
+.cal-opt { display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 14px; background: #fff; border: 1px solid #C7D3EC; }
+.cal-opt p { margin: 0; font-size: 14px; }
+.cal-opt .cal { padding: 11px 16px; font-size: 16px; background: #fff; border: 2px solid var(--ultra); color: var(--ultra); }
+.ref-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ref-line b { font: 800 18px/1.2 var(--display); color: var(--ultra); letter-spacing: .03em; }
+.copy-ref { padding: 5px 12px; border: 0; border-radius: 999px; background: var(--gold); color: var(--ink); font-weight: 800; font-size: 13px; }
+.ref-hint { color: #40507C; font-size: 12.5px !important; }
+.sum-wrap summary { cursor: pointer; font-weight: 700; font-size: 14px; color: var(--ultra); }
+.sum-wrap[open] summary { margin-bottom: 8px; }
 .cal { display: block; width: 100%; padding: 14px 18px; border-radius: 14px; background: var(--gold); color: var(--ink); text-align: center; text-decoration: none; font: 800 17px/1.15 var(--display); }
 .ghost {
   width: 100%;
@@ -1127,18 +1135,21 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
   </form>
 
   <div class="dlg-body" id="doneView" hidden>
-    <p class="ref-box">Your job reference <b id="refShow"></b><span>Type this in when you pick your time.</span></p>
-    <ol class="steps">
-      <li><strong>Press send in WhatsApp.</strong> Your details are already filled in.</li>
-      <li id="stepCal" hidden><strong id="calStepTitle">Pick your time</strong> in our calendar and enter your job reference.</li>
-      <li id="stepPhotos"><strong>Share 5 to 8 photos</strong> of the kitchen, bathrooms and living areas in the same chat.</li>
-      <li id="stepConfirm">We confirm your price and appointment.</li>
-    </ol>
-    <a class="wa" id="waLink" href="#" target="_blank" rel="noopener">1. Open WhatsApp</a>
-    <a class="cal" id="calLink" href="#" target="_blank" rel="noopener" hidden>📅 2. Pick your time</a>
-    <div class="summary" id="waText"></div>
-    <button class="ghost" id="copyBtn" type="button">Copy these details</button>
-    <p class="fine" style="color:#40507C">No WhatsApp? Message or call 246-263-7048 with the details above.</p>
+    <p class="done-lead"><strong>Just tap send in WhatsApp.</strong> Your details are already filled in. <span id="doneNext">We reply to confirm your price and time.</span></p>
+    <a class="wa" id="waLink" href="#" target="_blank" rel="noopener">Send on WhatsApp</a>
+    <p class="photos-tip" id="stepPhotos"></p>
+    <div class="cal-opt" id="calOpt" hidden>
+      <p><strong id="calOptTitle">Prefer to pick your time now?</strong> Optional. You can also just tell us in WhatsApp.</p>
+      <a class="cal" id="calLink" href="#" target="_blank" rel="noopener">📅 Pick a time</a>
+      <p class="ref-line">Job reference <b id="refShow"></b> <button type="button" class="copy-ref" id="copyRef">Copy</button></p>
+      <p class="ref-hint" id="refHint">We copy it for you when you tap Pick a time. Paste it in the Job reference box.</p>
+    </div>
+    <details class="sum-wrap">
+      <summary>See your booking details</summary>
+      <div class="summary" id="waText"></div>
+      <button class="ghost" id="copyBtn" type="button">Copy these details</button>
+    </details>
+    <p class="fine" style="color:#40507C">No WhatsApp? Call or text 246-263-7048 and give us your job reference.</p>
   </div>
   <canvas id="confetti" hidden></canvas>
 </dialog>
@@ -1716,8 +1727,7 @@ function bookingMessage(d) {
   if (truck) lines.push('Drop-off address: ' + d.dropoff.trim());
   lines.push('Payment: ' + d.pay);
   if (d.notes.trim()) lines.push('Notes: ' + d.notes.trim());
-  lines.push('', (meta.photos ? "I'll share 5-8 photos " + meta.photos + ' next' : "I'll have the laundry bagged and ready for pickup") +
-    (BOOKING_URL ? ', and pick ' + (visitFirst(s, e) ? 'a ' + (s.service === 'trades' ? 'site visit' : s.service === 'packages' || e.high > PRICING.walkthroughOver ? 'walkthrough' : 'call') + ' time' : 'my time') + ' in your calendar.' : '.'));
+  lines.push('', meta.photos ? "I'll share 5-8 photos " + meta.photos + ' next.' : "I'll have the laundry bagged and ready for pickup.");
   return lines.join('\n');
 }
 
@@ -1750,27 +1760,40 @@ form.addEventListener('submit', e => {
   const meta = SERVICES[state.service], big = estimate(state).high > PRICING.walkthroughOver;
   $('waLink').href = url;
   $('waText').textContent = text;
-  $('stepPhotos').innerHTML = meta.photos
-    ? '<strong>Share 5 to 8 photos</strong> ' + meta.photos + ' in the same chat' + (big ? ', and we will arrange a quick walkthrough.' : '.')
-    : '<strong>Have your laundry bagged</strong> and ready for pickup.';
+  $('stepPhotos').textContent = meta.photos
+    ? 'After you send, share a few photos ' + meta.photos + ' in the same chat. It helps us confirm your price fast.'
+    : 'Have your laundry bagged and ready for pickup.';
   $('refShow').textContent = jobRef;
   const visit = visitFirst(state, estimate(state));
+  const kind = state.service === 'trades' ? 'site visit' : state.service === 'packages' || big ? 'walkthrough' : 'call';
+  $('doneNext').textContent = visit ? 'We reply to arrange your free ' + kind + ', then send your quote.' : 'We reply to confirm your price and time.';
   if (BOOKING_URL) {
-    $('calLink').href = BOOKING_URL; $('calLink').hidden = false; $('stepCal').hidden = false;
-    const kind = state.service === 'trades' ? 'site visit' : state.service === 'packages' || estimate(state).high > PRICING.walkthroughOver ? 'walkthrough' : 'discovery call';
-    $('calLink').textContent = '📅 2. Pick your ' + (visit ? kind + ' time' : 'time');
-    $('calStepTitle').textContent = visit ? 'Pick a time for your free ' + kind : 'Pick your time';
+    $('calLink').href = BOOKING_URL; $('calOpt').hidden = false;
+    $('calLink').textContent = '📅 Pick a ' + (visit ? kind + ' time' : 'time');
+    $('calOptTitle').textContent = visit ? 'Prefer to pick your ' + kind + ' time now?' : 'Prefer to pick your time now?';
   }
-  $('stepConfirm').textContent = visit ? 'We send your written quote. Work is scheduled once the 75% deposit is in.' : 'We confirm your price and appointment.';
   logJob(text);
   form.hidden = true;
   $('doneView').hidden = false;
-  $('dlgTitle').textContent = 'One last step';
+  $('dlgTitle').textContent = 'Almost done!';
   dlg.scrollTop = 0;
   confetti();
   try { window.open(url, '_blank', 'noopener'); } catch (err) { /* the button below still works */ }
 });
 
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; } catch (err) {
+    try { const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok; } catch (e2) { return false; }
+  }
+}
+$('copyRef').addEventListener('click', async () => {
+  const ok = await copyText(jobRef);
+  $('copyRef').textContent = ok ? 'Copied ✓' : 'Copy failed';
+  setTimeout(() => { $('copyRef').textContent = 'Copy'; }, 2500);
+});
+$('calLink').addEventListener('click', () => {
+  copyText(jobRef).then(ok => { if (ok) $('refHint').textContent = 'Copied ✓ Paste it in the Job reference box on the booking page.'; });
+});
 $('copyBtn').addEventListener('click', async () => {
   const btn = $('copyBtn');
   try {
