@@ -1717,7 +1717,7 @@ function bookingMessage(d) {
   lines.push('Payment: ' + d.pay);
   if (d.notes.trim()) lines.push('Notes: ' + d.notes.trim());
   lines.push('', (meta.photos ? "I'll share 5-8 photos " + meta.photos + ' next' : "I'll have the laundry bagged and ready for pickup") +
-    (BOOKING_URL ? ', and pick ' + (visitFirst(s, e) ? 'a site visit time' : 'my time') + ' in your calendar.' : '.'));
+    (BOOKING_URL ? ', and pick ' + (visitFirst(s, e) ? 'a ' + (s.service === 'trades' ? 'site visit' : s.service === 'packages' || e.high > PRICING.walkthroughOver ? 'walkthrough' : 'call') + ' time' : 'my time') + ' in your calendar.' : '.'));
   return lines.join('\n');
 }
 
@@ -1757,8 +1757,9 @@ form.addEventListener('submit', e => {
   const visit = visitFirst(state, estimate(state));
   if (BOOKING_URL) {
     $('calLink').href = BOOKING_URL; $('calLink').hidden = false; $('stepCal').hidden = false;
-    $('calLink').textContent = '📅 2. Pick your ' + (visit ? 'site visit time' : 'time');
-    $('calStepTitle').textContent = visit ? 'Pick a time for your free ' + (state.service === 'trades' ? 'site visit' : state.service === 'packages' || estimate(state).high > PRICING.walkthroughOver ? 'walkthrough' : 'discovery call') : 'Pick your time';
+    const kind = state.service === 'trades' ? 'site visit' : state.service === 'packages' || estimate(state).high > PRICING.walkthroughOver ? 'walkthrough' : 'discovery call';
+    $('calLink').textContent = '📅 2. Pick your ' + (visit ? kind + ' time' : 'time');
+    $('calStepTitle').textContent = visit ? 'Pick a time for your free ' + kind : 'Pick your time';
   }
   $('stepConfirm').textContent = visit ? 'We send your written quote. Work is scheduled once the 75% deposit is in.' : 'We confirm your price and appointment.';
   logJob(text);
