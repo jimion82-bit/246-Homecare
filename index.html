@@ -1174,7 +1174,7 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
       <div class="field"><label for="j-exp">Experience</label>
         <select id="j-exp" name="experience"><option>Less than 1 year</option><option selected>1 to 3 years</option><option>3 to 5 years</option><option>More than 5 years</option></select></div>
       <div class="field wide" id="j-svcs-field"><label>What work can you do?</label>
-        <div class="chips"><label class="chip"><input type="checkbox" name="svcs" value="House cleaning"><span>House cleaning</span></label><label class="chip"><input type="checkbox" name="svcs" value="Window cleaning"><span>Window cleaning</span></label><label class="chip"><input type="checkbox" name="svcs" value="Landscaping"><span>Landscaping</span></label><label class="chip"><input type="checkbox" name="svcs" value="Pressure washing"><span>Pressure washing</span></label><label class="chip"><input type="checkbox" name="svcs" value="Patio cleaning"><span>Patio cleaning</span></label><label class="chip"><input type="checkbox" name="svcs" value="Plumbing"><span>Plumbing</span></label><label class="chip"><input type="checkbox" name="svcs" value="Tiling"><span>Tiling</span></label><label class="chip"><input type="checkbox" name="svcs" value="Appliance repair"><span>Appliance repair</span></label><label class="chip"><input type="checkbox" name="svcs" value="Home help"><span>Home help</span></label><label class="chip"><input type="checkbox" name="svcs" value="Handyman"><span>Handyman</span></label><label class="chip"><input type="checkbox" name="svcs" value="Laundry"><span>Laundry</span></label><label class="chip"><input type="checkbox" name="svcs" value="Truck / driving"><span>Truck / driving</span></label></div>
+        <div class="chips"><label class="chip"><input type="checkbox" name="svcs" value="Painting"><span>Painting</span></label><label class="chip"><input type="checkbox" name="svcs" value="Electrical"><span>Electrical</span></label><label class="chip"><input type="checkbox" name="svcs" value="Carpentry &amp; building"><span>Carpentry &amp; building</span></label><label class="chip"><input type="checkbox" name="svcs" value="House cleaning"><span>House cleaning</span></label><label class="chip"><input type="checkbox" name="svcs" value="Window cleaning"><span>Window cleaning</span></label><label class="chip"><input type="checkbox" name="svcs" value="Landscaping"><span>Landscaping</span></label><label class="chip"><input type="checkbox" name="svcs" value="Pressure washing"><span>Pressure washing</span></label><label class="chip"><input type="checkbox" name="svcs" value="Patio cleaning"><span>Patio cleaning</span></label><label class="chip"><input type="checkbox" name="svcs" value="Plumbing"><span>Plumbing</span></label><label class="chip"><input type="checkbox" name="svcs" value="Tiling"><span>Tiling</span></label><label class="chip"><input type="checkbox" name="svcs" value="Appliance repair"><span>Appliance repair</span></label><label class="chip"><input type="checkbox" name="svcs" value="Home help"><span>Home help</span></label><label class="chip"><input type="checkbox" name="svcs" value="Handyman"><span>Handyman</span></label><label class="chip"><input type="checkbox" name="svcs" value="Laundry"><span>Laundry</span></label><label class="chip"><input type="checkbox" name="svcs" value="Truck / driving"><span>Truck / driving</span></label></div>
         <span class="err">Please pick at least one type of work.</span></div>
       <div class="field wide"><label>Days you can work</label>
         <div class="chips"><label class="chip"><input type="checkbox" name="days" value="Mon" checked><span>Mon</span></label><label class="chip"><input type="checkbox" name="days" value="Tue" checked><span>Tue</span></label><label class="chip"><input type="checkbox" name="days" value="Wed" checked><span>Wed</span></label><label class="chip"><input type="checkbox" name="days" value="Thu" checked><span>Thu</span></label><label class="chip"><input type="checkbox" name="days" value="Fri" checked><span>Fri</span></label><label class="chip"><input type="checkbox" name="days" value="Sat"><span>Sat</span></label><label class="chip"><input type="checkbox" name="days" value="Sun"><span>Sun</span></label></div></div>
@@ -1735,7 +1735,7 @@ function logJob(text) {
   if (!JOBLOG_URL) return;
   const d = Object.fromEntries(new FormData(form)), e = estimate(state);
   const row = {
-    ref: jobRef, service: serviceLabel(state),
+    type: 'booking', ref: jobRef, service: serviceLabel(state),
     job: (state.service === 'trades' || state.service === 'repairs') ? PRICING.repairs[state.job].name : '',
     estimate: e.quote ? (e.quoteText || 'Quote after call') : 'BBD ' + (e.low === e.high ? money(e.low) : money(e.low) + ' - ' + money(e.high)),
     name: d.name, phone: d.phone, parish: d.parish, address: d.address, dropoff: d.dropoff || '', payment: d.pay, notes: d.notes,
@@ -1879,6 +1879,12 @@ joinForm.addEventListener('submit', e => {
     'Police certificate: ' + d.get('police')
   ].concat((d.get('about') || '').trim() ? ['About me: ' + d.get('about').trim()] : []).join('\n');
   const url = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text);
+  if (JOBLOG_URL) {
+    const row = { type: 'contractor', name: d.get('name').trim(), phone: d.get('phone').trim(), parish: d.get('parish'), experience: d.get('experience'),
+      work: svcs.join(', '), days: days.join(', ') || 'To discuss', transport: d.get('transport') ? 'Yes' : 'No', tools: d.get('tools') ? 'Yes' : 'No',
+      police: d.get('police'), notes: (d.get('about') || '').trim(), message: text };
+    try { fetch(JOBLOG_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(row), keepalive: true }); } catch (err) { /* never blocks the application */ }
+  }
   $('joinWa').href = url;
   $('joinText').textContent = text;
   joinForm.hidden = true;

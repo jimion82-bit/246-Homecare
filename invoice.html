@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>246 Invoice</title>
+<link rel="icon" href="logo.jpeg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;600;700&display=swap">
+<style>
+/* Layout concept: the same working desk as 246 Dispatch. Fill the invoice on the left, the client's copy builds on the right. */
+:root {
+  --ultra: #00267F; --ultra-soft: #123A9C; --gold: #FFC726; --ink: #0B1B4D; --paper: #F2F6FB;
+  --line: #C7D3EC; --muted: #4A5B86; --wa: #128C5E; --coral: #FF6B57;
+  --display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.45 var(--body); }
+header {
+  display: flex; align-items: center; gap: 12px;
+  padding-block: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--ultra); color: #fff;
+}
+header .badge { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; flex: none; }
+header .badge img { display: block; width: 52px; height: 52px; margin: -4.4px 0 0 -4.4px; }
+header h1 { margin: 0; font: 800 22px/1.1 var(--display); }
+header p { margin: 2px 0 0; color: var(--gold); font-size: 13px; font-weight: 600; }
+main {
+  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 24px; align-items: start;
+  max-width: 1240px; margin: 0 auto;
+  padding-block: 20px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+section { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+h2 { margin: 8px 0 0; font: 800 18px/1.2 var(--display); }
+h2:first-child { margin-top: 0; }
+.step { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 6px; border-radius: 50%; background: var(--gold); font-size: 13px; }
+textarea, input[type="text"], input[type="tel"], input[type="number"], input[type="date"] {
+  width: 100%; padding: 10px 12px; border: 2px solid var(--line); border-radius: 12px; background: #fff; font: inherit; color: inherit;
+}
+textarea { min-height: 90px; resize: vertical; font-size: 14px; }
+#paste { min-height: 120px; }
+textarea:focus, input:focus { outline: none; border-color: var(--ultra); }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field.full { grid-column: 1 / -1; }
+label.lbl { font-weight: 700; font-size: 14px; }
+.with-btn { display: flex; gap: 6px; }
+.with-btn input { flex: 1; min-width: 0; }
+.items { display: flex; flex-direction: column; gap: 8px; }
+.item { display: grid; grid-template-columns: minmax(0, 1fr) 70px 110px 40px; gap: 6px; align-items: center; }
+.item-head { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.item input { padding: 9px 10px; }
+.rm { width: 40px; height: 40px; padding: 0; border-radius: 10px; background: #fff; border: 2px solid var(--line); color: var(--muted); font-size: 18px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+button, .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 11px 16px; border: 0; border-radius: 12px; font: 700 15px/1.1 var(--body); text-decoration: none; cursor: pointer;
+}
+.small { padding: 8px 12px; font-size: 14px; }
+.primary { background: var(--ultra); color: #fff; }
+.wa { background: var(--wa); color: #fff; }
+.ghost { background: #fff; color: var(--ink); border: 2px solid var(--line); }
+button:focus-visible, .btn:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
+.note { margin: 0; font-size: 13px; color: var(--muted); }
+.warn { margin: 0; padding: 10px 12px; border-radius: 10px; background: #FFF4D1; font-size: 13.5px; }
+.ok { margin: 0; padding: 10px 12px; border-radius: 10px; background: #E2F5EC; font-size: 13.5px; }
+.preview-wrap { position: sticky; top: 16px; }
+.actions { position: sticky; bottom: 0; padding: 10px 0; background: var(--paper); }
+
+/* ---------- The invoice itself ---------- */
+.inv {
+  background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 38, 127, .12);
+  font: 14px/1.45 var(--body); color: var(--ink);
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.inv-top { display: flex; align-items: center; gap: 14px; padding: 22px 26px; background: var(--ultra); color: #fff; }
+.inv-top .badge { width: 64px; height: 64px; border-radius: 50%; overflow: hidden; flex: none; border: 3px solid var(--gold); }
+.inv-top .badge img { display: block; width: 100%; height: 100%; object-fit: cover; transform: scale(1.18); }
+.inv-top .biz { flex: 1; min-width: 0; }
+.inv-top .biz b { display: block; font: 800 22px/1.1 var(--display); }
+.inv-top .biz span { font-size: 12.5px; opacity: .85; }
+.inv-top .word { font: 800 30px/1 var(--display); color: var(--gold); letter-spacing: .04em; }
+.inv-body { padding: 22px 26px 8px; }
+.meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+.meta div { padding: 8px 10px; border-radius: 10px; background: var(--paper); }
+.meta small, .billto small, .pay small { display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.meta b { font-size: 14px; overflow-wrap: anywhere; }
+.billto { margin-bottom: 16px; }
+.billto p { margin: 2px 0 0; white-space: pre-line; overflow-wrap: anywhere; }
+.billto .name { font-weight: 700; font-size: 15.5px; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--ultra); border-bottom: 2px solid var(--ultra); padding: 6px 4px; }
+td { padding: 8px 4px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+.num { text-align: right; white-space: nowrap; }
+td.desc { width: 55%; }
+.empty-row td { color: var(--muted); font-style: italic; }
+.totals { margin: 12px 0 0 auto; width: min(320px, 100%); }
+.totals div { display: flex; justify-content: space-between; gap: 12px; padding: 5px 4px; }
+.totals .bal { margin-top: 6px; padding: 10px 12px; border-radius: 10px; background: var(--gold); font: 800 18px/1.2 var(--display); color: var(--ultra); }
+.paid { display: inline-block; margin-top: 8px; padding: 4px 10px; border: 2px solid var(--wa); border-radius: 8px; color: var(--wa); font-weight: 800; letter-spacing: .06em; }
+.pay { margin-top: 18px; padding: 14px 16px; border-radius: 12px; border: 2px solid var(--line); }
+.pay ul { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 5px; }
+.pay li { overflow-wrap: anywhere; }
+.pay li b { color: var(--ultra); }
+.inv-notes { margin-top: 14px; white-space: pre-line; overflow-wrap: anywhere; }
+.inv-foot { margin-top: 18px; padding: 12px 26px; background: var(--ultra); color: #fff; text-align: center; font-size: 13px; font-weight: 600; }
+.inv-foot span { color: var(--gold); }
+.thanks { margin: 16px 0 6px; font: 700 15px/1.3 var(--display); color: var(--ultra); }
+
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr; }
+  .preview-wrap { position: static; }
+}
+@media (max-width: 480px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .item { grid-template-columns: minmax(0, 1fr) 56px 84px 40px; }
+  .inv-top { padding: 16px; } .inv-body { padding: 16px 16px 4px; } .inv-foot { padding: 12px 16px; }
+  .inv-top .word { font-size: 22px; }
+  .meta { grid-template-columns: 1fr 1fr; }
+}
+
+/* ---------- Print: only the invoice, one page, A4 or Letter ---------- */
+@page { margin: 12mm; }
+@media print {
+  html, body { background: #fff; }
+  header, #form, .actions, .no-print { display: none !important; }
+  main { display: block; max-width: none; margin: 0; padding: 0; }
+  .preview-wrap { position: static; }
+  .inv { box-shadow: none; border-radius: 0; font-size: 12.5px; break-inside: avoid; }
+  .inv-top { padding: 16px 20px; }
+  .inv-body { padding: 16px 20px 4px; }
+  .inv-foot { padding: 10px 20px; }
+  td { padding: 6px 4px; }
+  tr { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<header>
+  <span class="badge"><img src="logo.jpeg" alt="246 Home Care logo"></span>
+  <div><h1>246 Invoice</h1><p>Make the client's invoice, send it on WhatsApp, log it to the sheet</p></div>
+</header>
+
+<main>
+  <section id="form">
+    <h2><span class="step">1</span>Paste the booking (optional)</h2>
+    <textarea id="paste" placeholder="Paste the client's WhatsApp booking message here. It fills in the job ref, name, phone and address."></textarea>
+    <p class="note" id="pasteNote">Nothing you paste leaves this page.</p>
+
+    <h2><span class="step">2</span>Invoice details</h2>
+    <div class="grid2">
+      <div class="field">
+        <label class="lbl" for="invNo">Invoice number</label>
+        <div class="with-btn"><input type="text" id="invNo"><button class="ghost small" id="newNo" type="button" title="Make a fresh number from the current time">New</button></div>
+      </div>
+      <div class="field"><label class="lbl" for="date">Date</label><input type="date" id="date"></div>
+      <div class="field full"><label class="lbl" for="ref">Job ref</label><input type="text" id="ref" placeholder="246-1122-AB"></div>
+      <div class="field"><label class="lbl" for="client">Client name</label><input type="text" id="client" autocomplete="off"></div>
+      <div class="field"><label class="lbl" for="phone">Client phone</label><input type="tel" id="phone" placeholder="e.g. 234 5678" autocomplete="off"></div>
+      <div class="field full"><label class="lbl" for="address">Address</label><textarea id="address" style="min-height:60px"></textarea></div>
+    </div>
+
+    <h2><span class="step">3</span>Line items (BBD)</h2>
+    <div class="items" id="items">
+      <div class="item item-head"><span>Description</span><span>Qty</span><span>Unit price</span><span></span></div>
+    </div>
+    <div class="row"><button class="ghost small" id="addItem" type="button">+ Add line</button></div>
+
+    <div class="grid2">
+      <div class="field">
+        <label class="lbl" for="deposit">Deposit already received (BBD)</label>
+        <div class="with-btn"><input type="number" id="deposit" min="0" step="0.01" inputmode="decimal" placeholder="0.00"><button class="ghost small" id="dep75" type="button" title="Set the deposit to 75% of the total">75%</button></div>
+      </div>
+      <div class="field full"><label class="lbl" for="notes">Notes (shown on the invoice)</label><textarea id="notes" placeholder="e.g. Balance due on completion. Thank you for choosing 246 Home Care."></textarea></div>
+    </div>
+    <p class="warn" id="cfgWarn" hidden></p>
+  </section>
+
+  <section class="preview-wrap">
+    <div class="inv" id="invoice">
+      <div class="inv-top">
+        <span class="badge"><img src="logo.jpeg" alt=""></span>
+        <div class="biz"><b>246 Home Care</b><span>Home services &amp; trades · Barbados</span></div>
+        <div class="word">INVOICE</div>
+      </div>
+      <div class="inv-body">
+        <div class="meta">
+          <div><small>Invoice no.</small><b id="pNo"></b></div>
+          <div><small>Date</small><b id="pDate"></b></div>
+          <div><small>Job ref</small><b id="pRef"></b></div>
+        </div>
+        <div class="billto">
+          <small>Bill to</small>
+          <p class="name" id="pClient"></p>
+          <p id="pPhone"></p>
+          <p id="pAddress"></p>
+        </div>
+        <table>
+          <thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Amount</th></tr></thead>
+          <tbody id="pItems"></tbody>
+        </table>
+        <div class="totals">
+          <div><span>Subtotal</span><b id="pSub"></b></div>
+          <div><span>Deposit received</span><b id="pDep"></b></div>
+          <div class="bal"><span>Balance due</span><span id="pBal"></span></div>
+          <div id="pPaid" hidden><span class="paid">PAID IN FULL</span></div>
+        </div>
+        <div class="pay">
+          <small>How to pay (BBD)</small>
+          <ul>
+            <li><b>CIBC 1stPay:</b> <span id="pFirstPay"></span></li>
+            <li><b>Online banking:</b> <span id="pBank"></span></li>
+            <li><b>PayPal:</b> <span id="pPayPal"></span></li>
+            <li><b>Cash:</b> on completion, to your 246 Home Care contact</li>
+          </ul>
+          <p class="note" style="margin-top:8px">Please use <b id="pPayRef"></b> as the payment reference.</p>
+        </div>
+        <div class="inv-notes" id="pNotes" hidden></div>
+        <p class="thanks">Thank you for choosing 246 Home Care.</p>
+      </div>
+      <div class="inv-foot">246-263-7048 <span>·</span> 246homecare.com <span>·</span> @246HomecareBB</div>
+    </div>
+
+    <div class="actions">
+      <div class="row">
+        <button class="primary" id="print" type="button">Save PDF / Print</button>
+        <button class="wa" id="sendWa" type="button">Send on WhatsApp</button>
+        <button class="ghost" id="logBtn" type="button">Log to sheet</button>
+        <button class="ghost" id="reset" type="button">New invoice</button>
+      </div>
+      <p class="note" style="margin-top:8px">Save the PDF first, then Send on WhatsApp and attach it in the chat. Sending also logs the invoice once.</p>
+      <p class="warn" id="warn" hidden style="margin-top:8px"></p>
+      <p class="ok" id="okMsg" hidden style="margin-top:8px"></p>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ---- Fill these in once. They show on every invoice and in the WhatsApp message. ---- */
+const PAYPAL_LINK = 'Send to 246homecarebb@gmail.com';
+const FIRSTPAY_DETAILS = 'Send to 1-246-826-7291';
+const BANK_DETAILS = 'Bank details sent on request';
+
+const JOBLOG_URL = 'https://script.google.com/macros/s/AKfycbw5_xl9yI3Q2l4Ee71CpM4-N70tumBtamzFS7KRdpNx_m2LDRGWIpgIu-NKjifEkU9-/exec';
+const DEPOSIT_SHARE = 0.75;
+
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, '0');
+const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
+const money = n => 'BBD $' + r2(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const plain = n => r2(n).toFixed(2);
+const isPlaceholder = s => /^FILL IN/i.test(s);
+const logged = new Set();   // invoice numbers already sent to the sheet this session
+
+function newInvoiceNo(d = new Date()) {
+  return 'INV-' + String(d.getFullYear()).slice(2) + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes());
+}
+function todayISO(d = new Date()) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function niceDate(iso) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+/* Same line parser as 246 Dispatch: "Key: value" per line, first one wins */
+function parse(text) {
+  const out = {};
+  text.split(/\r?\n/).forEach(line => {
+    const m = line.match(/^\s*([A-Za-z][A-Za-z \-\/]+?):\s*(.+)$/);
+    if (m && !(m[1].trim() in out)) out[m[1].trim()] = m[2].trim();
+  });
+  return out;
+}
+
+/* Barbados numbers: 7 digits -> 1246xxxxxxx; 246xxxxxxx -> 1246xxxxxxx; anything else passes through as digits */
+function waNumber(phone) {
+  const d = String(phone || '').replace(/\D/g, '');
+  if (d.length === 7) return '1246' + d;
+  if (d.length === 10 && d.startsWith('246')) return '1' + d;
+  return d;
+}
+
+/* ---------- Line items ---------- */
+function addItem(desc = '', qty = 1, price = '') {
+  const row = document.createElement('div');
+  row.className = 'item';
+  row.innerHTML = '<input type="text" class="i-desc" placeholder="e.g. Deep clean, 3 bed">' +
+    '<input type="number" class="i-qty" min="0" step="any" inputmode="decimal">' +
+    '<input type="number" class="i-price" min="0" step="0.01" inputmode="decimal" placeholder="0.00">' +
+    '<button type="button" class="rm" title="Remove this line" aria-label="Remove this line">×</button>';
+  row.querySelector('.i-desc').value = desc;
+  row.querySelector('.i-qty').value = qty;
+  row.querySelector('.i-price').value = price;
+  row.querySelector('.rm').addEventListener('click', () => {
+    row.remove();
+    if (!document.querySelector('#items .item:not(.item-head)')) addItem();
+    render();
+  });
+  row.addEventListener('input', render);
+  $('items').appendChild(row);
+  return row;
+}
+function items() {
+  return [...document.querySelectorAll('#items .item:not(.item-head)')].map(r => ({
+    desc: r.querySelector('.i-desc').value.trim(),
+    qty: Number(r.querySelector('.i-qty').value) || 0,
+    price: Number(r.querySelector('.i-price').value) || 0
+  })).filter(i => i.desc || i.price);
+}
+
+function state() {
+  const list = items();
+  const total = r2(list.reduce((s, i) => s + i.qty * i.price, 0));
+  const deposit = r2(Math.max(0, Number($('deposit').value) || 0));
+  return {
+    invoice: $('invNo').value.trim(), date: $('date').value, ref: $('ref').value.trim(),
+    client: $('client').value.trim(), phone: $('phone').value.trim(), address: $('address').value.trim(),
+    notes: $('notes').value.trim(), items: list, total, deposit, balance: r2(total - deposit)
+  };
+}
+
+/* ---------- Preview ---------- */
+function render() {
+  const s = state();
+  $('pNo').textContent = s.invoice || '—';
+  $('pDate').textContent = niceDate(s.date) || '—';
+  $('pRef').textContent = s.ref || '—';
+  $('pClient').textContent = s.client || 'Client name';
+  $('pPhone').textContent = s.phone;
+  $('pAddress').textContent = s.address;
+  const body = $('pItems');
+  body.textContent = '';
+  if (!s.items.length) {
+    const tr = body.insertRow(); tr.className = 'empty-row';
+    const td = tr.insertCell(); td.colSpan = 4; td.textContent = 'Add a line item';
+  }
+  s.items.forEach(i => {
+    const tr = body.insertRow();
+    const cells = [i.desc || '—', String(i.qty), money(i.price), money(i.qty * i.price)];
+    cells.forEach((t, n) => { const td = tr.insertCell(); td.textContent = t; td.className = n ? 'num' : 'desc'; });
+  });
+  $('pSub').textContent = money(s.total);
+  $('pDep').textContent = s.deposit ? '− ' + money(s.deposit) : money(0);
+  $('pBal').textContent = money(Math.max(0, s.balance));
+  $('pPaid').hidden = !(s.total > 0 && s.balance <= 0);
+  $('pFirstPay').textContent = FIRSTPAY_DETAILS;
+  $('pBank').textContent = BANK_DETAILS;
+  $('pPayPal').textContent = PAYPAL_LINK;
+  $('pPayRef').textContent = s.invoice || 'your invoice number';
+  $('pNotes').hidden = !s.notes;
+  $('pNotes').textContent = s.notes;
+  document.title = s.invoice ? s.invoice + (s.client ? ' ' + s.client : '') : '246 Invoice';
+}
+
+/* ---------- Paste to prefill ---------- */
+function prefill() {
+  const raw = $('paste').value;
+  if (!raw.trim()) { $('pasteNote').textContent = 'Nothing you paste leaves this page.'; return; }
+  const f = parse(raw), filled = [];
+  const set = (id, val, label) => { if (val) { $(id).value = val; filled.push(label); } };
+  set('ref', f['Job ref'], 'job ref');
+  set('client', f['Name'], 'name');
+  set('phone', f['Phone'], 'phone');
+  const addr = f['Address'] || f['Pickup address'];
+  if (addr) set('address', addr + (f['Parish'] && !addr.includes(f['Parish']) ? ', ' + f['Parish'] : ''), 'address');
+  // Start the first line with the booked service if the items are still empty
+  const first = document.querySelector('#items .item:not(.item-head) .i-desc');
+  if (f['Service'] && first && !first.value) { first.value = f['Service']; filled.push('first line'); }
+  $('pasteNote').textContent = filled.length ? 'Filled in: ' + filled.join(', ') + '. Check them below.' : 'No booking lines found. Check you pasted the whole message.';
+  render();
+}
+
+/* ---------- Actions ---------- */
+function showMsg(kind, text) {
+  $('warn').hidden = kind !== 'warn'; $('okMsg').hidden = kind !== 'ok';
+  $(kind === 'warn' ? 'warn' : 'okMsg').textContent = text;
+}
+function problems(s) {
+  const p = [];
+  if (!s.invoice) p.push('Add an invoice number.');
+  if (!s.items.length || s.total <= 0) p.push('Add at least one line item with a price.');
+  if (!s.client) p.push('Add the client’s name.');
+  return p;
+}
+
+function payload(s) {
+  return {
+    type: 'invoice', invoice: s.invoice, date: s.date, ref: s.ref, client: s.client, phone: s.phone, address: s.address,
+    items: s.items.map(i => i.desc + ' x ' + i.qty + ' @ ' + plain(i.price)).join('; '),
+    total: s.total, deposit: s.deposit, balance: Math.max(0, s.balance), status: 'Sent'
+  };
+}
+async function logInvoice(s) {
+  logged.add(s.invoice);
+  try {
+    await fetch(JOBLOG_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload(s)) });
+    return true;
+  } catch (e) {
+    logged.delete(s.invoice);
+    return false;
+  }
+}
+
+function waText(s) {
+  const first = s.client.split(/\s+/)[0] || 'there';
+  const how = ['CIBC 1stPay' + (isPlaceholder(FIRSTPAY_DETAILS) ? '' : ' (' + FIRSTPAY_DETAILS + ')'),
+    'online banking' + (isPlaceholder(BANK_DETAILS) ? '' : ' (' + BANK_DETAILS + ')'),
+    'PayPal' + (isPlaceholder(PAYPAL_LINK) ? '' : ' (' + PAYPAL_LINK + ')'),
+    'or cash'];
+  const lines = ['Hi ' + first + ', here is your 246 Home Care invoice ' + s.invoice + (s.ref ? ' for job ' + s.ref : '') + '.', '',
+    'Total: ' + money(s.total)];
+  if (s.deposit) lines.push('Deposit received: ' + money(s.deposit));
+  lines.push(s.balance > 0 ? 'Balance due: ' + money(s.balance) : 'Balance due: ' + money(0) + ' (paid in full, thank you!)');
+  if (s.balance > 0) lines.push('', 'How to pay: ' + how.join(', ') + '. Please use ' + s.invoice + ' as the reference.');
+  lines.push('', 'PDF attached. Thank you for choosing 246 Home Care!');
+  return lines.join('\n');
+}
+
+$('print').addEventListener('click', () => { render(); window.print(); });
+
+$('sendWa').addEventListener('click', async () => {
+  const s = state(), p = problems(s);
+  if (p.length) return showMsg('warn', p.join(' '));
+  const num = waNumber(s.phone);
+  const url = 'https://wa.me/' + num + '?text=' + encodeURIComponent(waText(s));
+  window.open(url, '_blank', 'noopener');   // open first so the popup is not blocked
+  if (!num) showMsg('warn', 'No phone number, so WhatsApp will ask you to pick the chat.');
+  if (!logged.has(s.invoice)) {
+    const ok = await logInvoice(s);
+    showMsg(ok ? 'ok' : 'warn', ok ? 'WhatsApp opened and ' + s.invoice + ' was sent to the job log.' : 'WhatsApp opened, but logging failed. Check your connection and press Log to sheet.');
+  } else if (num) showMsg('ok', 'WhatsApp opened. ' + s.invoice + ' was already logged, so it was not logged again.');
+});
+
+$('logBtn').addEventListener('click', async () => {
+  const s = state(), p = problems(s);
+  if (p.length) return showMsg('warn', p.join(' '));
+  if (logged.has(s.invoice) && !confirm(s.invoice + ' is already logged. Log it again?')) return;
+  const ok = await logInvoice(s);
+  showMsg(ok ? 'ok' : 'warn', ok ? s.invoice + ' was sent to the job log.' : 'Logging failed. Check your connection and try again.');
+});
+
+$('newNo').addEventListener('click', () => { $('invNo').value = newInvoiceNo(); render(); });
+$('dep75').addEventListener('click', () => { const s = state(); $('deposit').value = plain(s.total * DEPOSIT_SHARE); render(); });
+$('addItem').addEventListener('click', () => { addItem().querySelector('.i-desc').focus(); render(); });
+$('reset').addEventListener('click', () => {
+  if (!confirm('Start a new invoice? This clears the form.')) return;
+  ['paste', 'ref', 'client', 'phone', 'address', 'deposit', 'notes'].forEach(id => { $(id).value = ''; });
+  document.querySelectorAll('#items .item:not(.item-head)').forEach(r => r.remove());
+  addItem(); init(); showMsg('', '');
+});
+$('paste').addEventListener('input', prefill);
+['invNo', 'date', 'ref', 'client', 'phone', 'address', 'deposit', 'notes'].forEach(id => $(id).addEventListener('input', render));
+
+function init() {
+  $('invNo').value = newInvoiceNo();
+  $('date').value = todayISO();
+  $('pasteNote').textContent = 'Nothing you paste leaves this page.';
+  const unset = [['PAYPAL_LINK', PAYPAL_LINK], ['FIRSTPAY_DETAILS', FIRSTPAY_DETAILS], ['BANK_DETAILS', BANK_DETAILS]].filter(c => isPlaceholder(c[1])).map(c => c[0]);
+  $('cfgWarn').hidden = !unset.length;
+  $('cfgWarn').textContent = 'Payment details still need filling in: ' + unset.join(', ') + ' at the top of invoice.html.';
+  render();
+}
+addItem();
+init();
+</script>
+</body>
+</html>
