@@ -1116,7 +1116,7 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
         <div class="quote-label">Your estimate</div>
         <div class="price" id="price">$220 &ndash; $280</div>
       </div>
-      <div class="price-unit" id="priceUnit">BBD per visit<br>VAT inclusive</div>
+      <div class="price-unit" id="priceUnit">BBD per visit</div>
     </div>
     <button class="book" id="book" type="button">Book This Cleaning</button>
     <p class="fine" id="fine">This is an estimate based on the information provided. Final price will be confirmed upon photo review or on-site walkthrough prior to booking.</p>
@@ -1236,7 +1236,7 @@ dialog::backdrop { background: rgba(0,26,92,.62); backdrop-filter: blur(4px); }
 <script>
 /* ==========================================================================
    PRICING: every number that sets the estimate lives in this block.
-   All amounts are BBD, VAT inclusive.
+   All amounts are BBD.
    ========================================================================== */
 const PRICING = {
   sizeFixedShare: 0.25,    // share of a base price that does not move with size
@@ -1556,7 +1556,7 @@ function refreshUI() {
   $('recurringText').textContent = blocked ? 'Recurring is not available on a Move-Out' : 'Book biweekly or more';
 
   $('book').textContent = quoteMode ? (s.service === 'packages' ? 'Book a Walkthrough' : s.service === 'trades' ? 'Book a Free Site Visit' : 'Book a Discovery Call') : meta.book;
-  $('priceUnit').innerHTML = quoteMode ? 'Free visit<br>no obligation' : (e.unit || meta.unit) + '<br>VAT inclusive';
+  $('priceUnit').innerHTML = quoteMode ? 'Free visit<br>no obligation' : (e.unit || meta.unit);
   document.querySelectorAll('[data-pkg]').forEach(el => { el.hidden = !el.dataset.pkg.split(' ').includes(s.pkg); });
   $('pkgNote').textContent = PACKAGES[s.pkg].note;
 
@@ -1753,7 +1753,7 @@ function bookingMessage(d) {
   if (RECURRING.has(s.service)) lines.push('Frequency: ' + (e.recurringApplies ? 'Biweekly or more' : 'One visit'));
   lines.push(e.quote
       ? (s.service === 'packages' ? 'Estimate: Please arrange a walkthrough and give me a price.' : s.service === 'trades' ? 'Estimate: Please arrange a site visit and send me a written quote.' : 'Estimate: Please call me to discuss the job and give me a price.')
-      : 'Estimate: BBD ' + (e.low === e.high ? money(e.low) : money(e.low) + ' - ' + money(e.high)) + (e.unit ? ' ' + e.unit.replace('BBD ', '') : '') + ' (VAT incl.)',
+      : 'Estimate: BBD ' + (e.low === e.high ? money(e.low) : money(e.low) + ' - ' + money(e.high)) + (e.unit ? ' ' + e.unit.replace('BBD ', '') : ''),
     '',
     'Name: ' + d.name.trim(),
     'Phone: ' + d.phone.trim(),
@@ -1777,7 +1777,7 @@ function logJob(text) {
     name: d.name, phone: d.phone, parish: d.parish, address: d.address, dropoff: d.dropoff || '', payment: d.pay, notes: d.notes,
     details: e.details.concat('Found us: ' + SOURCE).join(' | '), message: text
   };
-  try { fetch(JOBLOG_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(row), keepalive: true }); } catch (err) { /* logging never blocks a booking */ }
+  try { fetch(JOBLOG_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(row), keepalive: true }).catch(() => {}); } catch (err) { /* logging never blocks a booking */ }
 }
 
 form.addEventListener('submit', e => {
@@ -1919,7 +1919,7 @@ joinForm.addEventListener('submit', e => {
     const row = { type: 'contractor', name: d.get('name').trim(), phone: d.get('phone').trim(), parish: d.get('parish'), experience: d.get('experience'),
       work: svcs.join(', '), days: days.join(', ') || 'To discuss', transport: d.get('transport') ? 'Yes' : 'No', tools: d.get('tools') ? 'Yes' : 'No',
       police: d.get('police'), notes: (d.get('about') || '').trim(), message: text };
-    try { fetch(JOBLOG_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(row), keepalive: true }); } catch (err) { /* never blocks the application */ }
+    try { fetch(JOBLOG_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(row), keepalive: true }).catch(() => {}); } catch (err) { /* never blocks the application */ }
   }
   $('joinWa').href = url;
   $('joinText').textContent = text;
