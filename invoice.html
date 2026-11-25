@@ -123,11 +123,11 @@ td.desc { width: 55%; }
 }
 
 /* ---------- Print: only the invoice, one page, A4 or Letter ---------- */
-@page { margin: 12mm; }
+@page { margin: 0; }
 @media print {
   html, body { background: #fff; }
   header, #form, .actions, .no-print { display: none !important; }
-  main { display: block; max-width: none; margin: 0; padding: 0; }
+  main { display: block; max-width: none; margin: 0; padding: 12mm; }
   .preview-wrap { position: static; }
   .inv { box-shadow: none; border-radius: 0; font-size: 12.5px; break-inside: avoid; }
   .inv-top { padding: 16px 20px; }
@@ -213,8 +213,6 @@ td.desc { width: 55%; }
           <ul>
             <li><b>CIBC 1stPay:</b> <span id="pFirstPay"></span></li>
             <li><b>Online banking:</b> <span id="pBank"></span></li>
-            <li><b>PayPal:</b> <span id="pPayPal"></span></li>
-            <li><b>Cash:</b> on completion, to your 246 Home Care contact</li>
           </ul>
           <p class="note" style="margin-top:8px">Please use <b id="pPayRef"></b> as the payment reference.</p>
         </div>
@@ -240,7 +238,6 @@ td.desc { width: 55%; }
 
 <script>
 /* ---- Fill these in once. They show on every invoice and in the WhatsApp message. ---- */
-const PAYPAL_LINK = 'Send to 246homecarebb@gmail.com';
 const FIRSTPAY_DETAILS = 'Send to 1-246-826-7291';
 const BANK_DETAILS = 'Bank details sent on request';
 
@@ -348,7 +345,6 @@ function render() {
   $('pPaid').hidden = !(s.total > 0 && s.balance <= 0);
   $('pFirstPay').textContent = FIRSTPAY_DETAILS;
   $('pBank').textContent = BANK_DETAILS;
-  $('pPayPal').textContent = PAYPAL_LINK;
   $('pPayRef').textContent = s.invoice || 'your invoice number';
   $('pNotes').hidden = !s.notes;
   $('pNotes').textContent = s.notes;
@@ -407,14 +403,12 @@ async function logInvoice(s) {
 function waText(s) {
   const first = s.client.split(/\s+/)[0] || 'there';
   const how = ['CIBC 1stPay' + (isPlaceholder(FIRSTPAY_DETAILS) ? '' : ' (' + FIRSTPAY_DETAILS + ')'),
-    'online banking' + (isPlaceholder(BANK_DETAILS) ? '' : ' (' + BANK_DETAILS + ')'),
-    'PayPal' + (isPlaceholder(PAYPAL_LINK) ? '' : ' (' + PAYPAL_LINK + ')'),
-    'or cash'];
+    'online banking' + (isPlaceholder(BANK_DETAILS) ? '' : ' (' + BANK_DETAILS + ')')];
   const lines = ['Hi ' + first + ', here is your 246 Home Care invoice ' + s.invoice + (s.ref ? ' for job ' + s.ref : '') + '.', '',
     'Total: ' + money(s.total)];
   if (s.deposit) lines.push('Deposit received: ' + money(s.deposit));
   lines.push(s.balance > 0 ? 'Balance due: ' + money(s.balance) : 'Balance due: ' + money(0) + ' (paid in full, thank you!)');
-  if (s.balance > 0) lines.push('', 'How to pay: ' + how.join(', ') + '. Please use ' + s.invoice + ' as the reference.');
+  if (s.balance > 0) lines.push('', 'How to pay: ' + how.join(' or ') + '. Please use ' + s.invoice + ' as the reference.');
   lines.push('', 'PDF attached. Thank you for choosing 246 Home Care!');
   return lines.join('\n');
 }
@@ -458,7 +452,7 @@ function init() {
   $('invNo').value = newInvoiceNo();
   $('date').value = todayISO();
   $('pasteNote').textContent = 'Nothing you paste leaves this page.';
-  const unset = [['PAYPAL_LINK', PAYPAL_LINK], ['FIRSTPAY_DETAILS', FIRSTPAY_DETAILS], ['BANK_DETAILS', BANK_DETAILS]].filter(c => isPlaceholder(c[1])).map(c => c[0]);
+  const unset = [['FIRSTPAY_DETAILS', FIRSTPAY_DETAILS], ['BANK_DETAILS', BANK_DETAILS]].filter(c => isPlaceholder(c[1])).map(c => c[0]);
   $('cfgWarn').hidden = !unset.length;
   $('cfgWarn').textContent = 'Payment details still need filling in: ' + unset.join(', ') + ' at the top of invoice.html.';
   render();
